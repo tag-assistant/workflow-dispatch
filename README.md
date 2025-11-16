@@ -1,87 +1,131 @@
-# Welcome to React Router!
+# Workflow Dispatch
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Modern full-stack application with Express 5.1.0 backend and React Router v7 frontend.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Architecture
 
-## Features
+- **Backend**: Express 5.1.0 with TypeScript, Helmet security, CORS, rate limiting, Pino logging, graceful shutdown
+- **Frontend**: React Router v7 with TypeScript, Vite, Tailwind CSS
+- **Deployment**: Docker Compose orchestration
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Quick Start
 
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+### Development (Local)
 
 ```bash
+# Install backend dependencies
+cd backend
 npm install
-```
+cp .env.example .env
+npm run dev
 
-### Development
-
-Start the development server with HMR:
-
-```bash
+# In another terminal, install frontend dependencies
+cd frontend
+npm install
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Backend runs on `http://localhost:3000`
+Frontend runs on `http://localhost:5173`
 
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+### Development (Docker Compose)
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+# Run with hot reload
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### Production (Docker Compose)
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+```bash
+# Build and run production containers
+docker-compose up -d
 
-### DIY Deployment
+# View logs
+docker-compose logs -f
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+# Stop services
+docker-compose down
 ```
 
-## Styling
+## API Endpoints
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+- `GET /api/hello` - Hello World endpoint
+- `GET /health/live` - Liveness probe (container is running)
+- `GET /health/ready` - Readiness probe (ready to accept traffic)
 
----
+## Project Structure
 
-Built with ❤️ using React Router.
+```
+.
+├── backend/                 # Express 5.1.0 API
+│   ├── src/
+│   │   ├── app.ts          # Express app setup
+│   │   ├── server.ts       # Server with graceful shutdown
+│   │   ├── routes/         # API routes
+│   │   ├── middlewares/    # Custom middleware
+│   │   └── utils/          # Utilities (logger, errors)
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/               # React Router v7
+│   ├── app/
+│   │   ├── routes/         # Route components
+│   │   └── lib/            # Utilities (API client)
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml      # Production configuration
+└── docker-compose.dev.yml  # Development overrides
+```
+
+## Tech Stack
+
+### Backend
+- Express 5.1.0 (latest, with native async error handling)
+- TypeScript 5.6
+- Helmet (security headers)
+- CORS
+- Express Rate Limit
+- Pino (high-performance logging)
+- @godaddy/terminus (graceful shutdown)
+
+### Frontend
+- React 19.1.1
+- React Router 7.9.2
+- TypeScript 5.9
+- Vite 7.1.7
+- Tailwind CSS 4.1.13
+
+## Environment Variables
+
+### Backend (.env)
+```
+NODE_ENV=development
+PORT=3000
+LOG_LEVEL=info
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3001
+```
+
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:3000
+```
+
+## Security Features
+
+- ✅ Helmet security headers (XSS, clickjacking protection)
+- ✅ CORS with configurable origins
+- ✅ Rate limiting (100 req/15min)
+- ✅ Non-root Docker user
+- ✅ Multi-stage Docker builds
+- ✅ Health checks for container orchestration
+- ✅ Graceful shutdown handling
+
+## Contributing
+
+The backend follows 2025 Express best practices with:
+- Layered architecture (routes, middleware, utils)
+- Custom error handling with AppError class
+- Structured logging with Pino
+- Automatic async error handling (Express 5 feature)
+- Type-safe TypeScript with strict mode
+- Production-ready Docker setup

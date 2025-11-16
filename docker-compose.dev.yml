@@ -1,0 +1,24 @@
+# Development override with volume mounts and hot reload
+services:
+  backend:
+    build:
+      context: ./backend
+      target: builder
+    command: npm run dev
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+
+  frontend:
+    command: npm run dev -- --host
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
