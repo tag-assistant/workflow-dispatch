@@ -28,7 +28,7 @@ export const initializePassport = () => {
         clientID: config.GITHUB_CLIENT_ID,
         clientSecret: config.GITHUB_CLIENT_SECRET,
         callbackURL: config.GITHUB_CALLBACK_URL,
-        scope: ['repo', 'workflow'], // Scopes needed for workflow dispatch
+        scope: ['repo', 'workflow', 'read:org'], // Scopes needed for workflow dispatch and listing orgs
       },
       (accessToken: string, refreshToken: string, profile: any, done: any) => {
         // Store the access token with the user profile

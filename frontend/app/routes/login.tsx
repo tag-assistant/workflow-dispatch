@@ -80,8 +80,8 @@ export default function Login() {
         </Button>
         
         <Text as="p" style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--fgColor-muted)' }}>
-          This app requires <strong>repo</strong> and <strong>workflow</strong> scopes
-          to trigger workflow dispatches on your behalf.
+          This app requires <strong>repo</strong>, <strong>workflow</strong>, and <strong>read:org</strong> scopes
+          to trigger workflow dispatches and list your organizations.
         </Text>
       </div>
     </div>

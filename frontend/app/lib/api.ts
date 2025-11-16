@@ -84,4 +84,93 @@ export const api = {
       body: JSON.stringify(data),
     }),
   },
+
+  // GitHub API endpoints
+  github: {
+    listOrgs: (params?: { page?: number; per_page?: number }) =>
+      fetchApi<{
+        orgs: Array<{
+          login: string;
+          id: number;
+          avatar_url: string;
+          description: string | null;
+        }>;
+        page: number;
+        per_page: number;
+        has_more: boolean;
+      }>(`/api/github/orgs?${new URLSearchParams({
+        page: (params?.page || 1).toString(),
+        per_page: (params?.per_page || 30).toString(),
+      })}`),
+
+    listRepos: (params?: { page?: number; per_page?: number; owner?: string; q?: string }) =>
+      fetchApi<{
+        repos: Array<{
+          id: number;
+          name: string;
+          full_name: string;
+          owner: string;
+          private: boolean;
+          description: string | null;
+          updated_at: string;
+        }>;
+        page: number;
+        per_page: number;
+        has_more: boolean;
+      }>(`/api/github/repos?${new URLSearchParams({
+        page: (params?.page || 1).toString(),
+        per_page: (params?.per_page || 30).toString(),
+        ...(params?.owner ? { owner: params.owner } : {}),
+        ...(params?.q ? { q: params.q } : {}),
+      })}`),  
+
+    listWorkflows: (owner: string, repo: string, params?: { page?: number; per_page?: number }) =>
+      fetchApi<{
+        workflows: Array<{
+          id: number;
+          name: string;
+          path: string;
+          state: string;
+          created_at: string;
+          updated_at: string;
+        }>;
+        page: number;
+        per_page: number;
+        has_more: boolean;
+        total_count: number;
+      }>(`/api/github/workflows/${owner}/${repo}?${new URLSearchParams({
+        page: (params?.page || 1).toString(),
+        per_page: (params?.per_page || 30).toString(),
+      })}`),
+
+    listBranches: (owner: string, repo: string, params?: { page?: number; per_page?: number }) =>
+      fetchApi<{
+        branches: Array<{
+          name: string;
+          protected: boolean;
+        }>;
+        page: number;
+        per_page: number;
+        has_more: boolean;
+      }>(`/api/github/repos/${owner}/${repo}/branches?${new URLSearchParams({
+        page: (params?.page || 1).toString(),
+        per_page: (params?.per_page || 30).toString(),
+      })}`),
+
+    getWorkflowSchema: (owner: string, repo: string, workflow_id: string) =>
+      fetchApi<{
+        id: number;
+        name: string;
+        path: string;
+        state: string;
+        has_workflow_dispatch: boolean;
+        inputs: Record<string, {
+          description: string;
+          required: boolean;
+          default: string;
+          type: string;
+          options: string[] | null;
+        }>;
+      }>(`/api/github/workflows/${owner}/${repo}/${workflow_id}`),
+  },
 };

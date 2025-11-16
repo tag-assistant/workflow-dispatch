@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import githubRoutes from './github.js';
 
 const router = Router();
 
@@ -19,5 +20,8 @@ router.get('/health/ready', (req, res) => {
 router.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello Worlds' });
 });
+
+// GitHub API routes
+router.use('/api/github', githubRoutes);
 
 export default router;
