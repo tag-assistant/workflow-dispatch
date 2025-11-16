@@ -9,6 +9,9 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@primer/css": "^22.0.2",
+    "@primer/primitives": "^11.3.0",
+    "@primer/react": "^38.1.0",
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
     "isbot": "^5.1.31",

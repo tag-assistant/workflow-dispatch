@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
 import { api } from "../lib/api";
+import { Heading, Text, Button, TextInput, FormControl } from "@primer/react";
+import { useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,22 +21,67 @@ export async function loader() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(`Form submitted! Name: ${name}, Email: ${email}`);
+  };
+
   return (
-    <div>
+    <div style={{ 
+      maxWidth: '800px', 
+      margin: '0 auto', 
+      padding: '2rem'
+    }}>
+      <Heading as="h1" style={{ marginBottom: '2rem' }}>
+        Primer Component Demo
+      </Heading>
+
+      {/* Buttons Demo */}
+      <div style={{ marginBottom: '2rem' }}>
+        <Heading as="h3" style={{ marginBottom: '1rem' }}>Buttons</Heading>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Button variant="primary">Primary Button</Button>
+          <Button>Default Button</Button>
+          <Button variant="danger">Danger Button</Button>
+          <Button variant="invisible">Invisible Button</Button>
+        </div>
+      </div>
+
+      {/* Form Demo */}
       <div style={{ 
-        marginTop: '2rem', 
-        padding: '1rem', 
-        border: '1px solid #ccc', 
-        borderRadius: '8px',
-        maxWidth: '600px',
-        margin: '2rem auto'
+        padding: '1.5rem', 
+        border: '1px solid var(--borderColor-default)', 
+        borderRadius: '6px'
       }}>
-        <h2>Backend API Status</h2>
-        {loaderData.error ? (
-          <p style={{ color: 'red' }}>❌ {loaderData.error}</p>
-        ) : (
-          <p style={{ color: 'green' }}>✅ {loaderData.message}</p>
-        )}
+        <Heading as="h3" style={{ marginBottom: '1.5rem' }}>Sample Form</Heading>
+        <form onSubmit={handleSubmit}>
+          <FormControl required style={{ marginBottom: '1.5rem' }}>
+            <FormControl.Label>Name</FormControl.Label>
+            <TextInput
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+            />
+          </FormControl>
+
+          <FormControl required style={{ marginBottom: '1.5rem' }}>
+            <FormControl.Label>Email</FormControl.Label>
+            <TextInput
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+            <FormControl.Caption>We'll never share your email.</FormControl.Caption>
+          </FormControl>
+
+          <Button type="submit" variant="primary">
+            Submit
+          </Button>
+        </form>
       </div>
     </div>
   );

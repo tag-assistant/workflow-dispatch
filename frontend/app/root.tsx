@@ -6,8 +6,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { ThemeProvider, BaseStyles } from "@primer/react";
 
 import type { Route } from "./+types/root";
+import "@primer/css/dist/primer.css";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,7 +44,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ThemeProvider colorMode="auto">
+      <BaseStyles>
+        <Outlet />
+      </BaseStyles>
+    </ThemeProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
