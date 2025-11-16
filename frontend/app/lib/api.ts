@@ -20,6 +20,7 @@ export async function fetchApi<T>(
   try {
     const response = await fetch(url, {
       ...options,
+      credentials: 'include', // Include cookies for session auth
       headers: {
         'Content-Type': 'application/json',
         ...options?.headers,
@@ -29,7 +30,7 @@ export async function fetchApi<T>(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
-        errorData.message || 'API request failed',
+        errorData.message || errorData.error || 'API request failed',
         response.status,
         errorData
       );
@@ -46,4 +47,41 @@ export async function fetchApi<T>(
 
 export const api = {
   hello: () => fetchApi<{ message: string }>('/api/hello'),
+  
+  // Auth endpoints
+  auth: {
+    getUser: () => fetchApi<{
+      id: string;
+      username: string;
+      displayName: string;
+      profileUrl: string;
+      avatarUrl?: string;
+    }>('/auth/user'),
+    
+    logout: () => fetchApi<{ message: string }>('/auth/logout', {
+      method: 'POST',
+    }),
+    
+    getLoginUrl: () => `${API_URL}/auth/github`,
+  },
+  
+  // Workflow endpoints
+  workflows: {
+    dispatch: (data: {
+      owner: string;
+      repo: string;
+      workflow_id: string;
+      ref: string;
+      inputs?: Record<string, string>;
+    }) => fetchApi<{
+      message: string;
+      owner: string;
+      repo: string;
+      workflow_id: string;
+      ref: string;
+    }>('/api/workflows/dispatch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  },
 };
