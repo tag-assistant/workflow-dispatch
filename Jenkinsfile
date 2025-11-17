@@ -1,39 +1,34 @@
-/* Docker-based build with Node.js */
+/* Build with Node.js Docker container */
 pipeline {
-    agent {
-        docker {
-            image 'node:24.11.1-alpine3.22'
-            args '-v $HOME/.npm:/root/.npm'
-        }
-    }
+    agent any
     
     stages {
-        stage('Environment Info') {
+        stage('Setup Node Container') {
             steps {
-                echo 'Node.js environment:'
-                sh 'node --version'
-                sh 'npm --version'
-                sh 'pwd'
+                echo 'Pulling Node.js Docker image...'
+                sh 'docker pull node:24.11.1-alpine3.22'
             }
         }
         
         stage('Build Backend') {
             steps {
                 echo 'Building backend...'
-                dir('backend') {
-                    sh 'npm ci'
-                    sh 'npm run build'
-                }
+                sh '''
+                    docker run --rm -v $(pwd)/backend:/app -w /app node:24.11.1-alpine3.22 sh -c "
+                        npm ci && npm run build
+                    "
+                '''
             }
         }
         
         stage('Build Frontend') {
             steps {
                 echo 'Building frontend...'
-                dir('frontend') {
-                    sh 'npm ci'
-                    sh 'npm run build'
-                }
+                sh '''
+                    docker run --rm -v $(pwd)/frontend:/app -w /app node:24.11.1-alpine3.22 sh -c "
+                        npm ci && npm run build
+                    "
+                '''
             }
         }
         
