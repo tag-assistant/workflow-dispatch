@@ -1,11 +1,10 @@
-/* Requires the Docker Pipeline plugin */
+/* Simplified version - runs on Jenkins built-in node */
 pipeline {
-    agent { docker { image 'node:24.11.1-alpine3.22' } }
+    agent any
     
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out code...'
                 checkout scm
             }
         }
@@ -54,8 +53,7 @@ pipeline {
             echo '❌ Build failed!'
         }
         always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
+            echo 'Build finished - workspace preserved for inspection'
         }
     }
 }
