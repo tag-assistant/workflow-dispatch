@@ -1,30 +1,47 @@
-/* Simplified version - runs on Jenkins built-in node */
+/* Docker-based build with Node.js */
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:24.11.1-alpine3.22'
+            args '-v $HOME/.npm:/root/.npm'
+        }
+    }
     
     stages {
-        stage('Verify Checkout') {
-            steps {
-                echo '✅ Repository checked out successfully'
-                sh 'ls -la'
-                sh 'git log -1 --oneline'
-            }
-        }
-        
         stage('Environment Info') {
             steps {
-                echo 'System information:'
-                sh 'uname -a'
+                echo 'Node.js environment:'
+                sh 'node --version'
+                sh 'npm --version'
                 sh 'pwd'
-                sh 'which git'
             }
         }
         
-        stage('Verify Structure') {
+        stage('Build Backend') {
             steps {
-                echo 'Checking project structure...'
-                sh 'ls -la backend/'
-                sh 'ls -la frontend/'
+                echo 'Building backend...'
+                dir('backend') {
+                    sh 'npm ci'
+                    sh 'npm run build'
+                }
+            }
+        }
+        
+        stage('Build Frontend') {
+            steps {
+                echo 'Building frontend...'
+                dir('frontend') {
+                    sh 'npm ci'
+                    sh 'npm run build'
+                }
+            }
+        }
+        
+        stage('Archive Artifacts') {
+            steps {
+                echo 'Archiving build artifacts...'
+                archiveArtifacts artifacts: 'backend/dist/**/*', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'frontend/dist/**/*', allowEmptyArchive: true
             }
         }
     }
