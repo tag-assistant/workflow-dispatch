@@ -88,7 +88,7 @@ export function DispatchPage() {
   return (
     <Box>
       <Box sx={{ mb: 4 }}>
-        <Heading>{title}</Heading>
+        <Heading sx={{ color: 'fg.default' }}>{title}</Heading>
         <Text sx={{ color: 'fg.muted' }}>{owner}/{repo} • {workflowPath}</Text>
         {description && <Text as="p" sx={{ mt: 1, color: 'fg.muted' }}>{description}</Text>}
       </Box>
@@ -113,7 +113,7 @@ export function DispatchPage() {
 
       {owner && repo && (
         <Box sx={{ mt: 6 }}>
-          <Heading sx={{ mb: 3, fontSize: 2 }}>Recent Runs</Heading>
+          <Heading sx={{ mb: 3, fontSize: 2, color: 'fg.default' }}>Recent Runs</Heading>
           <DispatchHistory owner={owner} repo={repo} workflowId={parseInt(workflowId!)} />
         </Box>
       )}

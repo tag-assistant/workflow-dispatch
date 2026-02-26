@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Box, Button, FormControl, ActionMenu, ActionList } from '@primer/react';
+import { Box, Button, FormControl, ActionMenu, ActionList, Text } from '@primer/react';
 import { RocketIcon, GitBranchIcon } from '@primer/octicons-react';
 import { InputField } from './InputField';
 import { InputGroup } from './InputGroup';
@@ -67,6 +67,12 @@ export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranc
 
   return (
     <Box>
+      {inputs.length === 0 && (
+        <Box sx={{ py: 4, px: 3, mb: 4, border: '1px solid', borderColor: 'border.default', borderRadius: 2, bg: 'canvas.subtle' }}>
+          <Text sx={{ color: 'fg.muted', fontStyle: 'italic' }}>This workflow has no configurable inputs. You can dispatch it directly.</Text>
+        </Box>
+      )}
+
       {groups?.map(group => (
         <InputGroup key={group.title} title={group.title}>
           {group.inputs.map(name => {
