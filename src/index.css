@@ -1,4 +1,87 @@
+/* GitHub Dark Mode Colors - hardcoded fallbacks for Primer theme */
+:root {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   padding: 0;
+  background-color: #0d1117 !important;
+  color: #e6edf3 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+}
+
+/* Force all text to be visible */
+h1, h2, h3, h4, h5, h6 {
+  color: #e6edf3 !important;
+}
+
+p, span, label, div, li, a {
+  color: inherit;
+}
+
+/* Muted text */
+[data-component="text"][class*="muted"],
+.color-fg-muted {
+  color: #9198a1 !important;
+}
+
+/* Links */
+a {
+  color: #58a6ff;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Primer form inputs */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+textarea,
+select {
+  background-color: #0d1117 !important;
+  color: #e6edf3 !important;
+  border-color: #30363d !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6e7681 !important;
+}
+
+/* Buttons */
+button {
+  color: #e6edf3;
+}
+
+/* Primer Box borders */
+[class*="Box"] {
+  border-color: #30363d;
+}
+
+/* Primer Header */
+header, [data-component="header"] {
+  background-color: #161b22 !important;
+  border-bottom: 1px solid #30363d;
+}
+
+/* ActionMenu / Dropdown overlays */
+[class*="Overlay"],
+[data-component="ActionList"] {
+  background-color: #161b22 !important;
+  border-color: #30363d !important;
+  color: #e6edf3 !important;
+}
+
+/* Flash/Toast messages */
+[class*="Flash"] {
+  border-color: #30363d;
+}
+
+/* Spinner */
+[class*="Spinner"] circle {
+  stroke: #58a6ff;
 }
