@@ -1,11 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Box, TextInput, ActionList, Text, Spinner } from '@primer/react';
+import { Box, TextInput, ActionList, Text } from '@primer/react';
 import { SearchIcon, RepoIcon, LockIcon } from '@primer/octicons-react';
+import { SkeletonText, SkeletonBox } from '@primer/react/experimental';
 import { searchRepos } from '../../lib/github';
 
 interface Props {
   onSelect: (owner: string, repo: string) => void;
   onResults?: (hasResults: boolean) => void;
+}
+
+function SearchSkeleton() {
+  return (
+    <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+      {[1, 2, 3, 4].map(i => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 3, py: '12px', borderBottom: '1px solid', borderColor: 'border.muted' }}>
+          <SkeletonBox width="16px" height="16px" />
+          <Box sx={{ flex: 1 }}>
+            <SkeletonText size="bodyMedium" />
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
 }
 
 export function RepoSearch({ onSelect, onResults }: Props) {
@@ -41,9 +57,7 @@ export function RepoSearch({ onSelect, onResults }: Props) {
         sx={{ width: '100%', mb: 3 }}
         size="large"
       />
-      {loading && (
-        <Box sx={{ textAlign: 'center', py: 4 }}><Spinner /></Box>
-      )}
+      {loading && <SearchSkeleton />}
       {!loading && searched && (
         <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
           <ActionList>

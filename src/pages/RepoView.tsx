@@ -1,10 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Heading, Text, ActionList, Flash, Spinner, Breadcrumbs, Button } from '@primer/react';
+import { Box, Heading, Text, ActionList, Breadcrumbs } from '@primer/react';
 import { WorkflowIcon, RepoIcon } from '@primer/octicons-react';
-import { Blankslate } from '@primer/react/experimental';
+import { Blankslate, Banner, SkeletonText, SkeletonBox } from '@primer/react/experimental';
 import { listWorkflows } from '../lib/github';
 import { addRecentRepo } from './Home';
+
+function WorkflowListSkeleton() {
+  return (
+    <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+      {[1, 2, 3].map(i => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 3, py: '12px', borderBottom: '1px solid', borderColor: 'border.muted' }}>
+          <SkeletonBox width="16px" height="16px" />
+          <Box sx={{ flex: 1 }}>
+            <SkeletonText size="bodyMedium" />
+            <SkeletonText size="bodySmall" maxWidth={200} />
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
+}
 
 export function RepoView() {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
@@ -22,9 +38,6 @@ export function RepoView() {
       .finally(() => setLoading(false));
   }, [owner, repo]);
 
-  if (loading) return <Box sx={{ textAlign: 'center', py: 6 }}><Spinner size="large" /></Box>;
-  if (error) return <Flash variant="danger">{error}</Flash>;
-
   return (
     <Box>
       <Breadcrumbs sx={{ mb: 3 }}>
@@ -40,7 +53,11 @@ export function RepoView() {
         </Box>
       </Box>
 
-      {workflows.length === 0 ? (
+      {error && <Banner variant="critical" title="Failed to load workflows">{error}</Banner>}
+
+      {loading && <WorkflowListSkeleton />}
+
+      {!loading && !error && workflows.length === 0 && (
         <Blankslate>
           <Blankslate.Visual>
             <WorkflowIcon size={24} />
@@ -50,7 +67,9 @@ export function RepoView() {
             This repository doesn't have any workflows with <code>workflow_dispatch</code> triggers.
           </Blankslate.Description>
         </Blankslate>
-      ) : (
+      )}
+
+      {!loading && !error && workflows.length > 0 && (
         <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
           <ActionList>
             {workflows.map(w => (

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { ActionList, Avatar, Box, Label, Spinner, Text, RelativeTime } from '@primer/react';
+import { ActionList, Avatar, Box, Label, Text, RelativeTime } from '@primer/react';
 import { CheckCircleIcon, XCircleIcon, ClockIcon, SyncIcon, SkipIcon } from '@primer/octicons-react';
+import { SkeletonText, SkeletonBox, SkeletonAvatar } from '@primer/react/experimental';
 import { listRuns } from '../../lib/github';
 
 interface Props {
@@ -24,6 +25,23 @@ function statusIcon(status: string, conclusion: string | null) {
   return <ClockIcon fill="var(--fgColor-muted)" />;
 }
 
+function RunsSkeleton() {
+  return (
+    <Box>
+      {[1, 2, 3, 4, 5].map(i => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 3, py: '10px', borderBottom: '1px solid', borderColor: 'border.muted' }}>
+          <SkeletonBox width="16px" height="16px" />
+          <SkeletonText size="bodyMedium" maxWidth={60} />
+          <SkeletonBox width="60px" height="20px" />
+          <Box sx={{ flex: 1 }} />
+          <SkeletonText size="bodySmall" maxWidth={80} />
+          <SkeletonAvatar size={20} />
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
 export const DispatchHistory = forwardRef<DispatchHistoryHandle, Props>(({ owner, repo, workflowId }, ref) => {
   const [runs, setRuns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +61,7 @@ export const DispatchHistory = forwardRef<DispatchHistoryHandle, Props>(({ owner
 
   useEffect(() => { fetchRuns(); }, [fetchRuns]);
 
-  if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><Spinner /></Box>;
+  if (loading) return <RunsSkeleton />;
   if (runs.length === 0) return <Text sx={{ color: 'fg.muted', fontStyle: 'italic' }}>No recent runs.</Text>;
 
   return (

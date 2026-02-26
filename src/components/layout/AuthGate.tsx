@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode, createContext, useContext } from 'react';
-import { Box, Heading, Text, TextInput, Button, Flash, Spinner } from '@primer/react';
+import { Box, Heading, Text, TextInput, Button, Spinner } from '@primer/react';
 import { MarkGithubIcon, KeyIcon, ShieldLockIcon, LinkExternalIcon } from '@primer/octicons-react';
+import { Banner } from '@primer/react/experimental';
 import { getToken, setToken, clearToken } from '../../lib/auth';
 import { validateToken, initOctokit, resetOctokit } from '../../lib/github';
 
@@ -85,7 +86,7 @@ export function AuthGate({ children }: Props) {
             </Text>
           </Box>
 
-          {error && <Flash variant="danger" sx={{ mb: 3 }}>{error}</Flash>}
+          {error && <Box sx={{ mb: 3 }}><Banner variant="critical">{error}</Banner></Box>}
 
           {/* Auth Card */}
           <Box sx={{

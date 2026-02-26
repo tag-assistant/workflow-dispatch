@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Button, Heading, Text, Flash, Spinner,
+  Box, Button, Heading, Text, Spinner,
   TextInput, FormControl, ActionMenu, ActionList, Breadcrumbs,
 } from '@primer/react';
 import { ArrowLeftIcon, GearIcon, PlusIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon } from '@primer/octicons-react';
+import { Banner } from '@primer/react/experimental';
 import { stringify } from 'yaml';
 import {
   DndContext, DragOverlay, closestCenter, pointerWithin,
@@ -71,6 +72,112 @@ function DragHandle({ listeners, attributes }: { listeners?: Record<string, Func
   );
 }
 
+/* ─── Input Card Fields with Progressive Disclosure ─── */
+function InputCardFields({
+  cfg, onUpdate, groups, showDynamic,
+}: {
+  cfg: InputBuilderState;
+  onUpdate: (field: keyof InputBuilderState, value: string) => void;
+  groups: GroupState[];
+  showDynamic: boolean;
+}) {
+  const [showAdvanced, setShowAdvanced] = useState(
+    () => (cfg.typeOverride !== 'auto') || cfg.pattern !== '' || cfg.dynamicSource !== 'none'
+  );
+
+  return (
+    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <FormControl>
+        <FormControl.Label>Label</FormControl.Label>
+        <TextInput block value={cfg.label} onChange={e => onUpdate('label', e.target.value)} />
+      </FormControl>
+      <FormControl>
+        <FormControl.Label>Description</FormControl.Label>
+        <TextInput block value={cfg.description} onChange={e => onUpdate('description', e.target.value)} placeholder="Help text shown below the field" />
+      </FormControl>
+      <FormControl>
+        <FormControl.Label>Placeholder</FormControl.Label>
+        <TextInput block value={cfg.placeholder} onChange={e => onUpdate('placeholder', e.target.value)} />
+      </FormControl>
+      <FormControl>
+        <FormControl.Label>Group</FormControl.Label>
+        <Box>
+          <ActionMenu>
+            <ActionMenu.Button>{groups.find(g => g.id === cfg.group)?.title || 'Ungrouped'}</ActionMenu.Button>
+            <ActionMenu.Overlay>
+              <ActionList selectionVariant="single">
+                <ActionList.Item selected={!cfg.group} onSelect={() => onUpdate('group', '')}>Ungrouped</ActionList.Item>
+                {groups.map(g => (
+                  <ActionList.Item key={g.id} selected={cfg.group === g.id} onSelect={() => onUpdate('group', g.id)}>
+                    {g.title}
+                  </ActionList.Item>
+                ))}
+              </ActionList>
+            </ActionMenu.Overlay>
+          </ActionMenu>
+        </Box>
+      </FormControl>
+
+      {/* Advanced options toggle */}
+      <Button variant="invisible" size="small" onClick={() => setShowAdvanced(!showAdvanced)} sx={{ alignSelf: 'flex-start' }}>
+        {showAdvanced ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}
+        <Text sx={{ ml: 1, fontSize: 0 }}>Advanced options</Text>
+      </Button>
+
+      {showAdvanced && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pl: 3, borderLeft: '2px solid', borderColor: 'border.default' }}>
+          <FormControl>
+            <FormControl.Label>Type override</FormControl.Label>
+            <Box>
+              <ActionMenu>
+                <ActionMenu.Button>{cfg.typeOverride || 'auto'}</ActionMenu.Button>
+                <ActionMenu.Overlay>
+                  <ActionList selectionVariant="single">
+                    {TYPE_OPTIONS.map(t => (
+                      <ActionList.Item key={t} selected={cfg.typeOverride === t} onSelect={() => onUpdate('typeOverride', t)}>
+                        {t}
+                      </ActionList.Item>
+                    ))}
+                  </ActionList>
+                </ActionMenu.Overlay>
+              </ActionMenu>
+            </Box>
+          </FormControl>
+          {showDynamic && (
+            <FormControl>
+              <FormControl.Label>Dynamic options</FormControl.Label>
+              <Box>
+                <ActionMenu>
+                  <ActionMenu.Button>{cfg.dynamicSource || 'none'}</ActionMenu.Button>
+                  <ActionMenu.Overlay>
+                    <ActionList selectionVariant="single">
+                      {DYNAMIC_OPTIONS.map(d => (
+                        <ActionList.Item key={d} selected={cfg.dynamicSource === d} onSelect={() => onUpdate('dynamicSource', d)}>
+                          {d}
+                        </ActionList.Item>
+                      ))}
+                    </ActionList>
+                  </ActionMenu.Overlay>
+                </ActionMenu>
+              </Box>
+            </FormControl>
+          )}
+          <FormControl>
+            <FormControl.Label>Validation pattern</FormControl.Label>
+            <TextInput block value={cfg.pattern} onChange={e => onUpdate('pattern', e.target.value)} placeholder="^v\d+\.\d+\.\d+$" />
+          </FormControl>
+          {cfg.pattern && (
+            <FormControl>
+              <FormControl.Label>Validation message</FormControl.Label>
+              <TextInput block value={cfg.validationMessage} onChange={e => onUpdate('validationMessage', e.target.value)} placeholder="Must match pattern" />
+            </FormControl>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 /* ─── Sortable Input Card ─── */
 function SortableInputCard({
   name, cfg, expanded, onToggle, onUpdate, groups, state,
@@ -105,84 +212,7 @@ function SortableInputCard({
         </Box>
       </Box>
       {expanded && (
-        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <FormControl>
-            <FormControl.Label>Label</FormControl.Label>
-            <TextInput block value={cfg.label} onChange={e => onUpdate('label', e.target.value)} />
-          </FormControl>
-          <FormControl>
-            <FormControl.Label>Description</FormControl.Label>
-            <TextInput block value={cfg.description} onChange={e => onUpdate('description', e.target.value)} placeholder="Help text" />
-          </FormControl>
-          <FormControl>
-            <FormControl.Label>Placeholder</FormControl.Label>
-            <TextInput block value={cfg.placeholder} onChange={e => onUpdate('placeholder', e.target.value)} />
-          </FormControl>
-          <FormControl>
-            <FormControl.Label>Type Override</FormControl.Label>
-            <Box>
-              <ActionMenu>
-                <ActionMenu.Button>{cfg.typeOverride || 'auto'}</ActionMenu.Button>
-                <ActionMenu.Overlay>
-                  <ActionList selectionVariant="single">
-                    {TYPE_OPTIONS.map(t => (
-                      <ActionList.Item key={t} selected={cfg.typeOverride === t} onSelect={() => onUpdate('typeOverride', t)}>
-                        {t}
-                      </ActionList.Item>
-                    ))}
-                  </ActionList>
-                </ActionMenu.Overlay>
-              </ActionMenu>
-            </Box>
-          </FormControl>
-          {showDynamic && (
-            <FormControl>
-              <FormControl.Label>Dynamic Options</FormControl.Label>
-              <Box>
-                <ActionMenu>
-                  <ActionMenu.Button>{cfg.dynamicSource || 'none'}</ActionMenu.Button>
-                  <ActionMenu.Overlay>
-                    <ActionList selectionVariant="single">
-                      {DYNAMIC_OPTIONS.map(d => (
-                        <ActionList.Item key={d} selected={cfg.dynamicSource === d} onSelect={() => onUpdate('dynamicSource', d)}>
-                          {d}
-                        </ActionList.Item>
-                      ))}
-                    </ActionList>
-                  </ActionMenu.Overlay>
-                </ActionMenu>
-              </Box>
-            </FormControl>
-          )}
-          <FormControl>
-            <FormControl.Label>Validation Pattern</FormControl.Label>
-            <TextInput block value={cfg.pattern} onChange={e => onUpdate('pattern', e.target.value)} placeholder="^v\d+\.\d+\.\d+$" />
-          </FormControl>
-          {cfg.pattern && (
-            <FormControl>
-              <FormControl.Label>Validation Message</FormControl.Label>
-              <TextInput block value={cfg.validationMessage} onChange={e => onUpdate('validationMessage', e.target.value)} placeholder="Must match pattern" />
-            </FormControl>
-          )}
-          <FormControl>
-            <FormControl.Label>Group</FormControl.Label>
-            <Box>
-              <ActionMenu>
-                <ActionMenu.Button>{groups.find(g => g.id === cfg.group)?.title || 'Ungrouped'}</ActionMenu.Button>
-                <ActionMenu.Overlay>
-                  <ActionList selectionVariant="single">
-                    <ActionList.Item selected={!cfg.group} onSelect={() => onUpdate('group', '')}>Ungrouped</ActionList.Item>
-                    {groups.map(g => (
-                      <ActionList.Item key={g.id} selected={cfg.group === g.id} onSelect={() => onUpdate('group', g.id)}>
-                        {g.title}
-                      </ActionList.Item>
-                    ))}
-                  </ActionList>
-                </ActionMenu.Overlay>
-              </ActionMenu>
-            </Box>
-          </FormControl>
-        </Box>
+        <InputCardFields cfg={cfg} onUpdate={onUpdate} groups={groups} showDynamic={showDynamic} />
       )}
     </Box>
   );
@@ -301,6 +331,7 @@ export function ConfigBuilder() {
   const [existingSha, setExistingSha] = useState<string | null>(null);
   const [expandedInputs, setExpandedInputs] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   const [state, setState] = useState<BuilderState>({
     title: '',
@@ -311,6 +342,25 @@ export function ConfigBuilder() {
   });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  // Track unsaved changes
+  const initialStateRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loading && initialStateRef.current === null) {
+      initialStateRef.current = JSON.stringify(state);
+    }
+    if (initialStateRef.current !== null) {
+      setIsDirty(JSON.stringify(state) !== initialStateRef.current);
+    }
+  }, [state, loading]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) { e.preventDefault(); }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
 
   useEffect(() => {
     if (!owner || !repo || !workflowId) return;
@@ -588,7 +638,7 @@ export function ConfigBuilder() {
   }, [state]);
 
   if (loading) return <Box sx={{ textAlign: 'center', py: 6 }}><Spinner size="large" /></Box>;
-  if (error) return <Flash variant="danger">{error}</Flash>;
+  if (error) return <Banner variant="critical" title="Failed to load configuration">{error}</Banner>;
 
   const previewConfig = buildPreviewConfig();
   const resolvedInputs = resolveInputs(parsedInputs, previewConfig);
@@ -623,10 +673,20 @@ export function ConfigBuilder() {
         <Box sx={{ flex: 1 }}>
           <Heading sx={{ fontSize: 2 }}><GearIcon /> Configure: {workflowFile}</Heading>
         </Box>
-        <Button variant="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+        <Button variant="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save configuration'}</Button>
       </Box>
 
-      {toast && <Flash variant={toast.type === 'success' ? 'success' : 'danger'} sx={{ mb: 3 }}>{toast.message}</Flash>}
+      {toast && (
+        <Box sx={{ mb: 3 }}>
+          <Banner
+            variant={toast.type === 'success' ? 'success' : 'critical'}
+            title={toast.type === 'success' ? 'Success' : 'Error'}
+            onDismiss={() => setToast(null)}
+          >
+            {toast.message}
+          </Banner>
+        </Box>
+      )}
 
       {/* Title & Description */}
       <Box sx={{ display: 'flex', gap: 3, mb: 4 }}>
