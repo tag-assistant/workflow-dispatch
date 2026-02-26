@@ -9,6 +9,7 @@ export interface InputConfig {
   type?: string;
   label?: string;
   icon?: string;
+  description?: string;
   placeholder?: string;
   pattern?: string;
   validationMessage?: string;
@@ -35,7 +36,7 @@ export interface DispatchConfig {
 
 export interface WorkflowInput {
   name: string;
-  description: string;
+  description?: string;
   required: boolean;
   default?: string;
   type: string;
@@ -64,6 +65,16 @@ export interface WorkflowRun {
   actor: { login: string; avatar_url: string } | null;
 }
 
+function isGenericDescription(desc: string, type: string): boolean {
+  if (!desc) return true;
+  const d = desc.trim().toLowerCase();
+  const t = type.toLowerCase();
+  // Matches: "string input", "String input (free-form text)", "string", etc.
+  if (d === t) return true;
+  if (d.startsWith(`${t} input`)) return true;
+  return false;
+}
+
 export function resolveInputs(inputs: WorkflowInput[], config?: WorkflowConfig): ResolvedInput[] {
   // Collect all config input names that aren't in parsed inputs (dynamic options from config)
   const parsedNames = new Set(inputs.map(i => i.name));
@@ -86,10 +97,14 @@ export function resolveInputs(inputs: WorkflowInput[], config?: WorkflowConfig):
 
   return allInputs.map(input => {
     const cfg = config?.inputs?.[input.name];
+    const resolvedType = cfg?.type || input.type || 'string';
+    const rawDesc = cfg?.description || input.description || '';
+    const description = isGenericDescription(rawDesc, resolvedType) ? undefined : rawDesc;
     return {
       ...input,
+      description,
       config: cfg,
-      resolvedType: cfg?.type || input.type || 'string',
+      resolvedType,
       label: cfg?.label || input.name,
       placeholder: cfg?.placeholder,
       pattern: cfg?.pattern,
