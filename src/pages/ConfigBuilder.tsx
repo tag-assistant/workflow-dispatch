@@ -74,11 +74,10 @@ function DragHandle({ listeners, attributes }: { listeners?: Record<string, Func
 
 /* ─── Input Card Fields with Progressive Disclosure ─── */
 function InputCardFields({
-  cfg, onUpdate, groups, showDynamic,
+  cfg, onUpdate, showDynamic,
 }: {
   cfg: InputBuilderState;
   onUpdate: (field: keyof InputBuilderState, value: string) => void;
-  groups: GroupState[];
   showDynamic: boolean;
 }) {
   const [showAdvanced, setShowAdvanced] = useState(
@@ -99,25 +98,6 @@ function InputCardFields({
         <FormControl.Label>Placeholder</FormControl.Label>
         <TextInput block value={cfg.placeholder} onChange={e => onUpdate('placeholder', e.target.value)} />
       </FormControl>
-      <FormControl>
-        <FormControl.Label>Group</FormControl.Label>
-        <Box>
-          <ActionMenu>
-            <ActionMenu.Button>{groups.find(g => g.id === cfg.group)?.title || 'Ungrouped'}</ActionMenu.Button>
-            <ActionMenu.Overlay>
-              <ActionList selectionVariant="single">
-                <ActionList.Item selected={!cfg.group} onSelect={() => onUpdate('group', '')}>Ungrouped</ActionList.Item>
-                {groups.map(g => (
-                  <ActionList.Item key={g.id} selected={cfg.group === g.id} onSelect={() => onUpdate('group', g.id)}>
-                    {g.title}
-                  </ActionList.Item>
-                ))}
-              </ActionList>
-            </ActionMenu.Overlay>
-          </ActionMenu>
-        </Box>
-      </FormControl>
-
       {/* Advanced options toggle */}
       <Button variant="invisible" size="small" onClick={() => setShowAdvanced(!showAdvanced)} sx={{ alignSelf: 'flex-start' }}>
         {showAdvanced ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}
@@ -180,14 +160,13 @@ function InputCardFields({
 
 /* ─── Sortable Input Card ─── */
 function SortableInputCard({
-  name, cfg, expanded, onToggle, onUpdate, groups, state,
+  name, cfg, expanded, onToggle, onUpdate, state,
 }: {
   name: string;
   cfg: InputBuilderState;
   expanded: boolean;
   onToggle: () => void;
   onUpdate: (field: keyof InputBuilderState, value: string) => void;
-  groups: GroupState[];
   state: BuilderState;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -212,7 +191,7 @@ function SortableInputCard({
         </Box>
       </Box>
       {expanded && (
-        <InputCardFields cfg={cfg} onUpdate={onUpdate} groups={groups} showDynamic={showDynamic} />
+        <InputCardFields cfg={cfg} onUpdate={onUpdate} showDynamic={showDynamic} />
       )}
     </Box>
   );
@@ -738,7 +717,6 @@ export function ConfigBuilder() {
                   expanded={expandedInputs.has(name)}
                   onToggle={() => toggleInput(name)}
                   onUpdate={(field, value) => updateInput(name, field, value)}
-                  groups={state.groups}
                   state={state}
                 />
               ))}
@@ -765,7 +743,6 @@ export function ConfigBuilder() {
                         expanded={expandedInputs.has(name)}
                         onToggle={() => toggleInput(name)}
                         onUpdate={(field, value) => updateInput(name, field, value)}
-                        groups={state.groups}
                         state={state}
                       />
                     ))}
