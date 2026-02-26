@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Heading, Text, Button, IconButton, Breadcrumbs, Tooltip } from '@primer/react';
 import { WorkflowIcon, GearIcon, StarIcon, StarFillIcon, LinkIcon } from '@primer/octicons-react';
 import { Banner, SkeletonText, SkeletonBox } from '@primer/react/experimental';
-import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
+import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows, listRuns } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
 import { resolveInputs, type WorkflowConfig } from '../lib/types';
 import { DispatchForm } from '../components/dispatch/DispatchForm';
@@ -50,7 +50,7 @@ export function DispatchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [dispatching, setDispatching] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string; runUrl?: string } | null>(null);
   const [configExists, setConfigExists] = useState(false);
   const [, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -127,7 +127,21 @@ export function DispatchPage() {
       setFeedback({ type: 'success', message: 'Workflow dispatched successfully' });
       markLastUsed(workflowKey(owner, repo, workflowId));
 
-      setTimeout(() => historyRef.current?.refresh(), 2000);
+      // Wait for run to appear, then update banner with link
+      setTimeout(async () => {
+        try {
+          const runs = await listRuns(owner, repo, parseInt(workflowId));
+          const latestRun = runs[0];
+          if (latestRun) {
+            setFeedback({
+              type: 'success',
+              message: 'Workflow dispatched!',
+              runUrl: `https://github.com/${owner}/${repo}/actions/runs/${latestRun.id}`,
+            });
+          }
+        } catch { /* ignore */ }
+        historyRef.current?.refresh();
+      }, 2000);
       const pollId = setInterval(() => historyRef.current?.refresh(), 5000);
       setTimeout(() => clearInterval(pollId), 30000);
 
@@ -226,6 +240,9 @@ export function DispatchPage() {
                 onDismiss={() => setFeedback(null)}
               >
                 {feedback.message}
+                {feedback.runUrl && (
+                  <> <a href={feedback.runUrl} target="_blank" rel="noopener noreferrer">View run →</a></>
+                )}
               </Banner>
             </Box>
           )}

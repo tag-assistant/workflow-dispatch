@@ -21,8 +21,8 @@ function statusIcon(status: string, conclusion: string | null) {
     if (conclusion === 'cancelled') return <SkipIcon fill="var(--fgColor-muted)" />;
     return <CheckCircleIcon fill="var(--fgColor-success)" />;
   }
-  if (status === 'in_progress') return <SyncIcon className="anim-rotate" fill="var(--fgColor-attention)" />;
-  return <ClockIcon fill="var(--fgColor-muted)" />;
+  if (status === 'in_progress') return <SyncIcon className="anim-rotate" fill="var(--fgColor-accent)" />;
+  return <ClockIcon fill="var(--fgColor-attention)" />;
 }
 
 function RunsSkeleton() {

@@ -19,8 +19,8 @@ function statusIcon(status: string, conclusion: string | null) {
     if (conclusion === 'failure') return <XCircleIcon fill="var(--fgColor-danger)" />;
     return <CheckCircleIcon />;
   }
-  if (status === 'in_progress') return <SyncIcon />;
-  return <ClockIcon />;
+  if (status === 'in_progress') return <SyncIcon className="anim-rotate" fill="var(--fgColor-accent)" />;
+  return <ClockIcon fill="var(--fgColor-attention)" />;
 }
 
 export function RunStatus({ run }: Props) {
