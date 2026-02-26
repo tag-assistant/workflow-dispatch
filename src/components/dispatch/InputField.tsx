@@ -1,9 +1,8 @@
-import { FormControl } from '@primer/react';
+import { FormControl, Checkbox } from '@primer/react';
 import type { ResolvedInput } from '../../lib/types';
 import { TextInput } from './inputs/TextInput';
 import { SelectInput } from './inputs/SelectInput';
 import { MultiSelect } from './inputs/MultiSelect';
-import { BooleanToggle } from './inputs/BooleanToggle';
 import { JsonEditor } from './inputs/JsonEditor';
 import { NumberInput } from './inputs/NumberInput';
 import { DateInput } from './inputs/DateInput';
@@ -21,10 +20,22 @@ interface Props {
 }
 
 export function InputField({ input, value, onChange, error, owner, repo }: Props) {
+  if (input.resolvedType === 'boolean') {
+    return (
+      <FormControl required={input.required}>
+        <Checkbox
+          checked={value === 'true'}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.checked ? 'true' : 'false')}
+        />
+        <FormControl.Label>{input.label}</FormControl.Label>
+        {input.description && <FormControl.Caption>{input.description}</FormControl.Caption>}
+        {error && <FormControl.Validation variant="error">{error}</FormControl.Validation>}
+      </FormControl>
+    );
+  }
+
   const renderControl = () => {
     switch (input.resolvedType) {
-      case 'boolean':
-        return <BooleanToggle value={value} onChange={onChange} />;
       case 'choice':
       case 'select':
         return (
@@ -57,8 +68,6 @@ export function InputField({ input, value, onChange, error, owner, repo }: Props
         return <TextInput value={value} onChange={onChange} placeholder={input.placeholder} multiline={(input.description?.length || 0) > 100} />;
     }
   };
-
-  const isBool = input.resolvedType === 'boolean';
 
   return (
     <FormControl required={input.required}>

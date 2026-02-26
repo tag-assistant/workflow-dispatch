@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActionMenu, ActionList, Spinner, Box } from '@primer/react';
+import { Select, Spinner, Box } from '@primer/react';
 import { fetchDynamicOptions, listEnvironments } from '../../../lib/github';
 import type { OptionsFrom } from '../../../lib/types';
 
@@ -35,24 +35,16 @@ export function SelectInput({ options: staticOptions, value, onChange, owner, re
     }
   }, [isEnvironment, owner, repo, optionsFrom]);
 
-  const selectedLabel = options.find(o => o.value === value)?.label || value;
+  if (loading) {
+    return <Box sx={{ p: 2 }}><Spinner size="small" /></Box>;
+  }
 
   return (
-    <ActionMenu>
-      <ActionMenu.Button>{selectedLabel || 'Select...'}</ActionMenu.Button>
-      <ActionMenu.Overlay>
-        <ActionList selectionVariant="single">
-          {loading ? (
-            <Box sx={{ p: 3, textAlign: 'center' }}><Spinner size="small" /></Box>
-          ) : (
-            options.map(opt => (
-              <ActionList.Item key={opt.value} selected={opt.value === value} onSelect={() => onChange(opt.value)}>
-                {opt.label}
-              </ActionList.Item>
-            ))
-          )}
-        </ActionList>
-      </ActionMenu.Overlay>
-    </ActionMenu>
+    <Select value={value} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}>
+      {!value && <Select.Option value="">Select...</Select.Option>}
+      {options.map(opt => (
+        <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
+      ))}
+    </Select>
   );
 }
