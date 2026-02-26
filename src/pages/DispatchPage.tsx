@@ -55,6 +55,7 @@ export function DispatchPage() {
   const [, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
   const historyRef = useRef<DispatchHistoryHandle>(null);
+  const pollTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const formValuesRef = useRef<Record<string, string>>({});
   const [tipDismissed, setTipDismissed] = useState(() => {
     if (!owner || !repo) return false;
@@ -67,6 +68,24 @@ export function DispatchPage() {
       markLastUsed(workflowKey(owner, repo, workflowId));
     }
   }, [owner, repo, workflowId]);
+
+  // Refresh runs on tab focus
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === 'visible') {
+        historyRef.current?.refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, []);
+
+  // Cleanup poll timers on unmount
+  useEffect(() => {
+    return () => {
+      pollTimersRef.current.forEach(t => clearTimeout(t));
+    };
+  }, []);
 
   // Read URL params for pre-fill
   const urlRef = searchParams.get('ref');
@@ -127,23 +146,29 @@ export function DispatchPage() {
       setFeedback({ type: 'success', message: 'Workflow dispatched successfully' });
       markLastUsed(workflowKey(owner, repo, workflowId));
 
-      // Wait for run to appear, then update banner with link
-      setTimeout(async () => {
+      // Clear any previous poll timers
+      pollTimersRef.current.forEach(t => clearTimeout(t));
+      const dispatchTime = Date.now();
+
+      // Poll aggressively for the new run
+      const poll = () => { historyRef.current?.refresh(); };
+      const delays = [1500, 3000, 6000, 10000, 15000, 20000, 30000, 45000, 60000];
+      pollTimersRef.current = delays.map(d => setTimeout(poll, d));
+
+      // Fetch run link after 3s
+      pollTimersRef.current.push(setTimeout(async () => {
         try {
           const runs = await listRuns(owner, repo, parseInt(workflowId));
           const latestRun = runs[0];
-          if (latestRun) {
+          if (latestRun && new Date(latestRun.created_at).getTime() > dispatchTime - 10000) {
             setFeedback({
               type: 'success',
               message: 'Workflow dispatched!',
-              runUrl: `https://github.com/${owner}/${repo}/actions/runs/${latestRun.id}`,
+              runUrl: latestRun.html_url || `https://github.com/${owner}/${repo}/actions/runs/${latestRun.id}`,
             });
           }
         } catch { /* ignore */ }
-        historyRef.current?.refresh();
-      }, 2000);
-      const pollId = setInterval(() => historyRef.current?.refresh(), 5000);
-      setTimeout(() => clearInterval(pollId), 30000);
+      }, 3000));
 
       document.getElementById('recent-runs')?.scrollIntoView({ behavior: 'smooth' });
     } catch (e: any) {
