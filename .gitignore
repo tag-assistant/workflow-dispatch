@@ -1,10 +1,6 @@
-.DS_Store
-.env
 node_modules/
-
-# React Router
-frontend/.react-router/
-frontend/build/
-
 dist/
-.playwright-mcp/**
+.env
+*.local
+.DS_Store
+coverage/

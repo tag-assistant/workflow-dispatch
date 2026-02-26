@@ -1,50 +1,35 @@
 import { Router } from 'express';
-import passport from '../middlewares/auth.js';
+import passport from 'passport';
 
-const router = Router();
+export const authRouter = Router();
 
-// Initiate GitHub OAuth flow
-router.get('/github', passport.authenticate('github'));
-
-// GitHub OAuth callback
-router.get(
-  '/github/callback',
-  passport.authenticate('github', { 
-    failureRedirect: process.env.FRONTEND_URL || 'http://localhost:5173/login',
-    successRedirect: process.env.FRONTEND_URL || 'http://localhost:5173'
-  })
-);
-
-// Get current authenticated user
-router.get('/user', (req, res) => {
-  if (req.isAuthenticated()) {
+authRouter.get('/status', (req, res) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
     const user = req.user as any;
-    // Don't send the access token to the frontend for security
     res.json({
-      id: user.id,
-      username: user.username,
-      displayName: user.displayName,
-      profileUrl: user.profileUrl,
-      avatarUrl: user.avatarUrl,
+      authenticated: true,
+      user: {
+        login: user.username || user.displayName,
+        avatar: user.photos?.[0]?.value,
+        name: user.displayName,
+      },
     });
   } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.json({ authenticated: false });
   }
 });
 
-// Logout
-router.post('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to logout' });
-    }
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to destroy session' });
-      }
-      res.json({ message: 'Logged out successfully' });
-    });
+authRouter.get('/github', passport.authenticate('github', { scope: ['repo', 'workflow'] }));
+
+authRouter.get('/github/callback',
+  passport.authenticate('github', { failureRedirect: '/' }),
+  (_req, res) => {
+    res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
+  }
+);
+
+authRouter.post('/logout', (req, res) => {
+  req.logout(() => {
+    res.json({ success: true });
   });
 });
-
-export default router;

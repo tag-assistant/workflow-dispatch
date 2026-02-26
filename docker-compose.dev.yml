@@ -1,24 +1,27 @@
-# Development override with volume mounts and hot reload
 services:
   backend:
     build:
       context: ./backend
-      target: builder
-    command: npm run dev
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
     volumes:
       - ./backend/src:/app/src
-      - ./backend/package.json:/app/package.json
-      - ./backend/tsconfig.json:/app/tsconfig.json
     environment:
       - NODE_ENV=development
-      - LOG_LEVEL=debug
+      - PORT=3001
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - SESSION_SECRET=dev-secret
+      - FRONTEND_URL=http://localhost:5173
 
   frontend:
-    command: npm run dev -- --host
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ./frontend/app:/app/app
+    depends_on:
+      - backend

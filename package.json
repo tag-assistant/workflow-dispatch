@@ -1,13 +1,14 @@
 {
-  "name": "workflow_dispatch",
-  "version": "1.0.0",
-  "description": "Modern full-stack application with Express 5.1.0 backend and React Router v7 frontend.",
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "name": "workflow-dispatch",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A customizable workflow dispatch UI builder for GitHub Actions",
+  "license": "MIT",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+    "dev": "concurrently -n fe,be -c cyan,green \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "start": "npm run start --prefix backend",
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -3,40 +3,24 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: workflow-dispatch-backend
-    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=3000
-      - LOG_LEVEL=info
-      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3001
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health/live', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-    networks:
-      - app-network
+      - PORT=3001
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - CALLBACK_URL=${CALLBACK_URL}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: workflow-dispatch-frontend
-    restart: unless-stopped
     ports:
-      - "3001:3000"
-    environment:
-      - VITE_API_URL=http://backend:3000
+      - "3000:80"
     depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - backend
+    restart: unless-stopped
