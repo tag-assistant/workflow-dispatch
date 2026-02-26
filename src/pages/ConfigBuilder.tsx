@@ -19,7 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
 import { getWorkflowContent, listWorkflows, getOctokit, getRepoConfig } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
-import { resolveInputs, type WorkflowInput, type WorkflowConfig, type InputConfig } from '../lib/types';
+import { resolveInputs, type WorkflowInput, type WorkflowConfig, type InputConfig, type ResolvedInput } from '../lib/types';
 import { DispatchForm } from '../components/dispatch/DispatchForm';
 
 interface InputBuilderState {
@@ -517,33 +517,36 @@ export function ConfigBuilder() {
     if (activeData?.type === 'input') {
       const inputName = activeData.name as string;
 
-      // Determine target group
-      let targetGroupId = '';
-      if (overData?.type === 'group') {
-        targetGroupId = overData.groupId === UNGROUPED_ID ? '' : overData.groupId as string;
-      } else if (overData?.type === 'input') {
-        const overName = overData.name as string;
-        targetGroupId = state.inputs[overName]?.group || '';
-      } else {
-        return;
-      }
-
       setState(prev => {
-        const newInputs = { ...prev.inputs, [inputName]: { ...prev.inputs[inputName], group: targetGroupId } };
+        const currentGroup = prev.inputs[inputName]?.group || '';
+        let targetGroupId = '';
 
-        // Handle reordering within same group
-        if (overData?.type === 'input' && prev.inputs[inputName].group === prev.inputs[overData.name as string]?.group) {
-          const oldIdx = prev.inputOrder.indexOf(inputName);
-          const newIdx = prev.inputOrder.indexOf(overData.name as string);
+        if (overData?.type === 'group') {
+          targetGroupId = overData.groupId === UNGROUPED_ID ? '' : overData.groupId as string;
+        } else if (overData?.type === 'input') {
+          const overName = overData.name as string;
+          targetGroupId = prev.inputs[overName]?.group || '';
+        } else {
+          return prev;
+        }
+
+        const newInputs = { ...prev.inputs, [inputName]: { ...prev.inputs[inputName], group: targetGroupId } };
+        let newOrder = [...prev.inputOrder];
+
+        // If dropped on another input, also handle reordering
+        if (overData?.type === 'input') {
+          const overName = overData.name as string;
+          const oldIdx = newOrder.indexOf(inputName);
+          const newIdx = newOrder.indexOf(overName);
           if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
-            return { ...prev, inputs: newInputs, inputOrder: arrayMove(prev.inputOrder, oldIdx, newIdx) };
+            newOrder = arrayMove(newOrder, oldIdx, newIdx);
           }
         }
 
-        return { ...prev, inputs: newInputs };
+        return { ...prev, inputs: newInputs, inputOrder: newOrder };
       });
     }
-  }, [state.inputs]);
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!owner || !repo) return;
@@ -555,7 +558,9 @@ export function ConfigBuilder() {
       if (state.description) wfConfig.description = state.description;
 
       const inputs: Record<string, any> = {};
-      for (const [name, cfg] of Object.entries(state.inputs)) {
+      for (const name of state.inputOrder) {
+        const cfg = state.inputs[name];
+        if (!cfg) continue;
         const ic: any = {};
         if (cfg.label && cfg.label !== titleCase(name)) ic.label = cfg.label;
         if (cfg.description) ic.description = cfg.description;
@@ -573,7 +578,7 @@ export function ConfigBuilder() {
       if (state.groups.length > 0) {
         const groups = state.groups.map(g => ({
           title: g.title,
-          inputs: Object.entries(state.inputs).filter(([, v]) => v.group === g.id).map(([k]) => k),
+          inputs: state.inputOrder.filter(name => state.inputs[name]?.group === g.id),
         })).filter(g => g.inputs.length > 0);
         if (groups.length > 0) wfConfig.groups = groups;
       }
@@ -631,7 +636,7 @@ export function ConfigBuilder() {
 
     const groups = state.groups.map(g => ({
       title: g.title,
-      inputs: Object.entries(state.inputs).filter(([, v]) => v.group === g.id).map(([k]) => k),
+      inputs: state.inputOrder.filter(name => state.inputs[name]?.group === g.id),
     })).filter(g => g.inputs.length > 0);
 
     return { title: state.title, description: state.description, inputs, groups: groups.length > 0 ? groups : undefined };
@@ -642,6 +647,10 @@ export function ConfigBuilder() {
 
   const previewConfig = buildPreviewConfig();
   const resolvedInputs = resolveInputs(parsedInputs, previewConfig);
+  // Reorder to match inputOrder
+  const orderedInputs = state.inputOrder
+    .map(name => resolvedInputs.find(i => i.name === name))
+    .filter(Boolean) as ResolvedInput[];
 
   // Determine active drag overlay
   let overlayContent: React.ReactNode = null;
@@ -782,7 +791,7 @@ export function ConfigBuilder() {
             {state.title && <Heading sx={{ fontSize: 2, mb: 1 }}>{state.title}</Heading>}
             {state.description && <Text sx={{ color: 'fg.muted', fontSize: 1, mb: 3, display: 'block' }}>{state.description}</Text>}
             <DispatchForm
-              inputs={resolvedInputs}
+              inputs={orderedInputs}
               groups={previewConfig.groups}
               branches={[{ name: 'main' }]}
               selectedBranch="main"
