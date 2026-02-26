@@ -1,109 +1,156 @@
-# Workflow Dispatch UI
+# Workflow Dispatch
 
-> A beautiful, static web UI for dispatching GitHub Actions workflows — deployable on GitHub Pages.
+> A better UI for GitHub's `workflow_dispatch` — with custom labels, grouped inputs, dynamic dropdowns, and validation.
 
-**[Live Demo →](https://tag-assistant.github.io/workflow-dispatch/)**
+**[🚀 Try it live →](https://workflow-dispatch.vercel.app)**
 
-## Features
+<!-- TODO: Add screenshot -->
+<!-- ![Screenshot](docs/screenshot.png) -->
 
-- 🚀 **Dispatch workflows** with a clean, form-based UI
-- 🔍 **Search repositories** and browse dispatchable workflows
-- 🎨 **Custom input types** — text, select, boolean, JSON, number, date, color, slider, file, multi-select
-- 📋 **Custom configuration** via `.github/workflow-dispatch.yml` — labels, icons, placeholders, input groups
-- 🌙 **Dark mode** — follows your system preference (Primer theme)
-- 📊 **Run history** — see recent workflow runs inline
-- 🔒 **Client-side only** — your token never leaves your browser
+## ✨ Features
 
-## Quick Start
+- 🏷️ **Custom labels & descriptions** — Replace raw input names with friendly labels and help text
+- 📂 **Input grouping** — Organize inputs into collapsible sections
+- 🔽 **Dynamic dropdowns** — Populate selects from branches, tags, releases, environments, and more
+- ✅ **Validation** — Regex patterns with custom error messages
+- 🎨 **Rich input types** — Booleans as toggles, choices as dropdowns, strings with placeholders
+- 📋 **Dispatch history** — See recent workflow runs and their status
+- 🔐 **Token-based auth** — Uses your GitHub PAT, nothing stored server-side
 
-1. Visit the [live demo](https://tag-assistant.github.io/workflow-dispatch/)
-2. Enter a [Personal Access Token](https://github.com/settings/tokens/new?scopes=repo,workflow&description=Workflow+Dispatch+UI) with `repo` and `workflow` scopes
-3. Search for a repository, pick a workflow, fill in inputs, and dispatch!
+## 🚀 Quick Start
 
-## Deploy Your Own
+1. Go to **[workflow-dispatch.vercel.app](https://workflow-dispatch.vercel.app)**
+2. Enter a GitHub Personal Access Token (needs `repo` and `actions` scopes)
+3. Search for a repository and select a `workflow_dispatch` workflow
+4. Fill in the inputs and hit **Dispatch** 🎉
 
-1. Fork this repository
-2. Enable GitHub Pages in your repo settings (source: GitHub Actions)
-3. Push to `main` — the included GitHub Actions workflow will build and deploy automatically
+### Optional: Add a config file
 
-### Local Development
-
-```bash
-git clone https://github.com/tag-assistant/workflow-dispatch.git
-cd workflow-dispatch
-npm install
-npm run dev
-```
-
-## Configuration
-
-Add a `.github/workflow-dispatch.yml` to any repository to customize the dispatch UI:
+Drop a `.github/workflow-dispatch.yml` in your repo to customize the UI:
 
 ```yaml
 workflows:
   deploy.yml:
     title: "🚀 Deploy"
-    description: "Deploy to production"
+    description: "Deploy to any environment"
     inputs:
       environment:
         label: "🌍 Environment"
-        icon: "🌍"
+        description: "Target environment"
       version:
         label: "📦 Version"
-        placeholder: "e.g. v1.0.0"
+        placeholder: "e.g. v1.2.3"
     groups:
-      - title: "Deployment"
-        inputs: ["environment", "version"]
+      - title: "Target"
+        inputs: [environment, version]
 ```
 
-### Configuration Options
+## 📖 Configuration Guide
 
-| Field | Description |
-|-------|-------------|
-| `title` | Display title for the workflow |
-| `description` | Description shown below the title |
-| `inputs.<name>.label` | Custom label for the input |
-| `inputs.<name>.icon` | Emoji icon shown before the label |
-| `inputs.<name>.placeholder` | Placeholder text |
-| `inputs.<name>.type` | Override input type (see below) |
-| `inputs.<name>.pattern` | Regex validation pattern |
-| `inputs.<name>.validation` | Custom validation error message |
-| `inputs.<name>.min/max/step` | Numeric constraints |
-| `inputs.<name>.options` | Options for multi-select (`[{value, label}]`) |
-| `groups` | Group inputs into titled sections |
-| `jsonMode` | Pack all inputs into a single JSON string |
+The config file lives at `.github/workflow-dispatch.yml` in your repository.
 
-### Input Types
+### Structure
 
-| Type | Description |
-|------|-------------|
-| `string` | Text input (default) |
-| `boolean` | Checkbox toggle |
-| `choice` | Dropdown select (from workflow `options`) |
-| `environment` | Dropdown populated from repo environments |
-| `number` | Numeric input with min/max/step |
-| `date` | Date picker |
-| `color` | Color picker with hex input |
-| `slider` | Range slider with min/max/step |
-| `json` | Monaco JSON editor |
-| `file` | File upload or paste |
-| `multi-select` | Checkbox group |
+```yaml
+workflows:
+  <workflow-filename>.yml:
+    title: "Display Title"          # Optional
+    description: "Shown below title" # Optional
+    inputs:
+      <input-name>:
+        label: "Custom Label"
+        description: "Help text"
+        placeholder: "Placeholder"
+        pattern: "^v\\d+$"
+        validationMessage: "Error message"
+    groups:
+      - title: "Section Name"
+        description: "Section description"  # Optional
+        inputs: [input1, input2]
+```
 
-## How It Works
+### Input Properties
 
-- **No backend** — all GitHub API calls happen directly from your browser using [Octokit](https://github.com/octokit/rest.js)
-- **PAT authentication** — your token is stored in `localStorage` and used for all API calls
-- **Workflow parsing** — fetches workflow YAML from the repo, parses `on.workflow_dispatch.inputs`, and generates a form
-- **Static deployment** — builds to a static `dist/` folder, deployed via GitHub Pages
+| Property | Description |
+|---|---|
+| `label` | Display label (default: title-cased input name) |
+| `description` | Help text shown below the input |
+| `placeholder` | Placeholder text for text/select inputs |
+| `pattern` | Regex validation pattern (string inputs only) |
+| `validationMessage` | Error message when pattern doesn't match |
+| `type` | Set to `select` for dynamic dropdowns |
+| `optionsFrom` | Source for dynamic options (see below) |
 
-## Tech Stack
+### Dynamic Dropdowns (`optionsFrom`)
 
-- [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- [Primer React](https://primer.style/react/) — GitHub's design system
-- [Octokit](https://github.com/octokit/rest.js) — GitHub API client
-- [Vite](https://vitejs.dev/) — build tool
-- [yaml](https://github.com/eemeli/yaml) — YAML parser
+Add inputs that pull options from the GitHub API:
 
-## License
+```yaml
+inputs:
+  branch:
+    type: select
+    label: "Branch"
+    optionsFrom:
+      source: branches
+```
 
-MIT
+| Source | Description |
+|---|---|
+| `branches` | Repository branches |
+| `tags` | Repository tags |
+| `releases` | GitHub releases (tag names) |
+| `environments` | Deployment environments |
+| `collaborators` | Repository collaborators |
+| `labels` | Issue/PR labels |
+| `milestones` | Repository milestones |
+
+### Groups
+
+Organize inputs into collapsible sections:
+
+```yaml
+groups:
+  - title: "🎯 Target"
+    description: "Where to deploy"
+    inputs: [environment, version, branch]
+  - title: "⚙️ Options"
+    inputs: [dry_run, notify]
+```
+
+### Full Example
+
+See the [live example config](https://github.com/tag-assistant/workflow-dispatch/blob/main/.github/workflow-dispatch.yml) used by this repo.
+
+## Input Types
+
+| GitHub Type | UI Control |
+|---|---|
+| `string` | Text input with optional placeholder & validation |
+| `boolean` | Toggle switch |
+| `choice` | Dropdown select |
+| `number` | Number input |
+| `environment` | Environment selector |
+| *dynamic* (`select` + `optionsFrom`) | Dropdown populated from GitHub API |
+
+## 🏗️ Self-Hosted
+
+1. Fork this repository
+2. Deploy to Vercel (or any static host):
+   ```bash
+   npm install
+   npm run build
+   # Output in dist/
+   ```
+3. Optionally set up your own Vercel project and push
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Run `npm run build` to verify
+5. Open a PR
+
+## 📄 License
+
+[MIT](LICENSE)

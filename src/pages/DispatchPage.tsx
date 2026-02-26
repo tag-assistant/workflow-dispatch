@@ -140,8 +140,10 @@ export function DispatchPage() {
       {!configExists && !bannerDismissed && (
         <Flash variant="default" sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ fontSize: 1 }}>
-            ℹ️ This workflow is using auto-detected inputs. Customize labels, grouping, and validation with a config file.{' '}
-            <a href={configUrl} target="_blank" rel="noopener noreferrer">Customize →</a>
+            ✨ <strong>Tip:</strong> Add a <code>.github/workflow-dispatch.yml</code> to customize labels, add grouping, and populate dropdowns from your repo's tags, branches, and releases.{' '}
+            <a href="https://github.com/tag-assistant/workflow-dispatch/blob/main/.github/workflow-dispatch.yml" target="_blank" rel="noopener noreferrer">See example →</a>
+            {' · '}
+            <a href={configUrl} target="_blank" rel="noopener noreferrer">Add config →</a>
           </Box>
           <IconButton icon={XIcon} variant="invisible" size="small" aria-label="Dismiss" onClick={dismissBanner} />
         </Flash>

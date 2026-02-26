@@ -1,0 +1,43 @@
+name: "🚀 Deploy Application"
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target deployment environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      version:
+        description: 'Version to deploy'
+        required: true
+        type: string
+        default: 'latest'
+      dry_run:
+        description: 'Simulate deployment without making changes'
+        type: boolean
+        default: false
+      notify_slack:
+        description: 'Post deployment notification to Slack'
+        type: boolean
+        default: true
+      rollback_on_failure:
+        description: 'Automatically rollback if health checks fail'
+        type: boolean
+        default: true
+      notes:
+        description: 'Deployment notes for the changelog'
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "🚀 Deploying ${{ inputs.version }} to ${{ inputs.environment }}"
+          echo "Dry run: ${{ inputs.dry_run }}"
+          echo "Notify: ${{ inputs.notify_slack }}"
+          echo "Rollback: ${{ inputs.rollback_on_failure }}"
+          echo "Notes: ${{ inputs.notes }}"

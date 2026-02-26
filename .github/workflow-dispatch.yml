@@ -1,34 +1,59 @@
+# Workflow Dispatch UI Configuration
+# https://github.com/tag-assistant/workflow-dispatch#configuration
+
 workflows:
-  test-dispatch.yml:
+  deploy-example.yml:
     title: "🚀 Deploy Application"
-    description: "Deploy the application to a target environment with optional configuration"
+    description: "Deploy the application to any environment with full control over the process"
+
     inputs:
       environment:
-        label: "🌍 Target Environment"
+        label: "🌍 Environment"
+        description: "Where should this be deployed?"
+
       version:
         label: "📦 Version"
+        description: "Semver tag or 'latest' for the newest build"
         placeholder: "e.g. v1.2.3 or latest"
-        pattern: "^(latest|v\\d+\\.\\d+\\.\\d+.*)$"
-        validationMessage: "Enter 'latest' or a semver version (e.g. v1.2.3)"
+
       dry_run:
-        label: "🧪 Dry Run Mode"
-      message:
-        label: "📝 Deploy Notes"
-        placeholder: "What changed in this deploy?"
-      notify:
-        label: "🔔 Send Notifications"
-      tag:
-        type: select
-        label: "🏷️ Release Tag"
-        optionsFrom:
-          source: tags
-      branch:
+        label: "🧪 Dry Run"
+        description: "Simulate without making real changes"
+
+      notify_slack:
+        label: "📢 Slack Notification"
+        description: "Post to #deployments channel"
+
+      rollback_on_failure:
+        label: "🔄 Auto-Rollback"
+        description: "Revert if post-deploy health checks fail"
+
+      notes:
+        label: "📝 Release Notes"
+        description: "What changed? (shown in changelog)"
+        placeholder: "Fixed auth bug, updated dependencies..."
+
+      # Dynamic inputs — populated from GitHub API
+      target_branch:
         type: select
         label: "🌿 Target Branch"
+        description: "Branch to deploy from"
         optionsFrom:
           source: branches
+
+      release_tag:
+        type: select
+        label: "🏷️ Release"
+        description: "Pick a specific release"
+        optionsFrom:
+          source: releases
+
     groups:
-      - title: "Deployment"
-        inputs: [environment, version, tag, branch]
-      - title: "Options"
-        inputs: [dry_run, notify, message]
+      - title: "🎯 Target"
+        description: "Where and what to deploy"
+        inputs: [environment, version, target_branch, release_tag]
+      - title: "⚙️ Options"
+        description: "Deployment behavior"
+        inputs: [dry_run, notify_slack, rollback_on_failure]
+      - title: "📋 Details"
+        inputs: [notes]
