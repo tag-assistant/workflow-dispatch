@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Button, Heading, Text, Flash, Spinner,
-  TextInput, FormControl, ActionMenu, ActionList,
+  TextInput, FormControl, ActionMenu, ActionList, Breadcrumbs,
 } from '@primer/react';
 import { ArrowLeftIcon, GearIcon, PlusIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon } from '@primer/octicons-react';
 import { stringify } from 'yaml';
@@ -610,6 +610,13 @@ export function ConfigBuilder() {
 
   return (
     <Box>
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Breadcrumbs.Item onClick={() => navigate('/')} sx={{ cursor: 'pointer' }}>Home</Breadcrumbs.Item>
+        <Breadcrumbs.Item onClick={() => navigate(`/${owner}/${repo}`)} sx={{ cursor: 'pointer' }}>{owner}/{repo}</Breadcrumbs.Item>
+        <Breadcrumbs.Item onClick={() => navigate(`/${owner}/${repo}/${workflowId}`)} sx={{ cursor: 'pointer' }}>{workflowFile}</Breadcrumbs.Item>
+        <Breadcrumbs.Item selected>Configure</Breadcrumbs.Item>
+      </Breadcrumbs>
+
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4, pb: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
         <Button variant="invisible" leadingVisual={ArrowLeftIcon} onClick={() => navigate(`/${owner}/${repo}/${workflowId}`)}>Back</Button>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Heading, Text, Flash, Spinner, Button, IconButton } from '@primer/react';
+import { Box, Heading, Text, Flash, Spinner, Button, IconButton, Breadcrumbs } from '@primer/react';
 import { WorkflowIcon, GearIcon, XIcon } from '@primer/octicons-react';
 import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
@@ -109,6 +109,12 @@ export function DispatchPage() {
 
   return (
     <Box>
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Breadcrumbs.Item onClick={() => navigate('/')} sx={{ cursor: 'pointer' }}>Home</Breadcrumbs.Item>
+        <Breadcrumbs.Item onClick={() => navigate(`/${owner}/${repo}`)} sx={{ cursor: 'pointer' }}>{owner}/{repo}</Breadcrumbs.Item>
+        <Breadcrumbs.Item selected>{title}</Breadcrumbs.Item>
+      </Breadcrumbs>
+
       {/* Page Header */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', gap: 3 }}>
         <Box sx={{ color: 'fg.muted', mt: 1 }}>
