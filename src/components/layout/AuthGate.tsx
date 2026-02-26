@@ -79,8 +79,8 @@ export function AuthGate({ children }: Props) {
           {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 5 }}>
             <MarkGithubIcon size={48} />
-            <Heading sx={{ mt: 3, mb: 2, color: '#e6edf3' }}>Workflow Dispatch</Heading>
-            <Text sx={{ color: '#9198a1', fontSize: 1 }}>
+            <Heading sx={{ mt: 3, mb: 2, color: 'fg.default' }}>Workflow Dispatch</Heading>
+            <Text sx={{ color: 'fg.muted', fontSize: 1 }}>
               Dispatch GitHub Actions workflows with a beautiful custom UI
             </Text>
           </Box>
@@ -104,17 +104,17 @@ export function AuthGate({ children }: Props) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Box sx={{
                   width: 28, height: 28, borderRadius: '50%',
-                  bg: step >= 1 ? '#238636' : '#30363d',
+                  bg: step >= 1 ? 'success.emphasis' : 'neutral.muted',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 0, fontWeight: 'bold', color: '#fff', flexShrink: 0,
+                  fontSize: 0, fontWeight: 'bold', color: 'fg.onEmphasis', flexShrink: 0,
                 }}>1</Box>
-                <Text sx={{ fontWeight: 'bold', color: '#e6edf3', fontSize: 1 }}>
+                <Text sx={{ fontWeight: 'bold', color: 'fg.default', fontSize: 1 }}>
                   Create a GitHub Personal Access Token
                 </Text>
               </Box>
 
-              <Text as="p" sx={{ color: '#9198a1', fontSize: 0, ml: '36px', mb: 3 }}>
-                You'll need a token with <strong style={{ color: '#e6edf3' }}>repo</strong> and <strong style={{ color: '#e6edf3' }}>workflow</strong> scopes.
+              <Text as="p" sx={{ color: 'fg.muted', fontSize: 0, ml: '36px', mb: 3 }}>
+                You'll need a token with <strong style={{ color: 'inherit' }}>repo</strong> and <strong style={{ color: 'inherit' }}>workflow</strong> scopes.
                 We'll pre-fill everything for you.
               </Text>
 
@@ -141,11 +141,11 @@ export function AuthGate({ children }: Props) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Box sx={{
                   width: 28, height: 28, borderRadius: '50%',
-                  bg: step >= 2 ? '#238636' : '#30363d',
+                  bg: step >= 2 ? 'success.emphasis' : 'neutral.muted',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 0, fontWeight: 'bold', color: '#fff', flexShrink: 0,
+                  fontSize: 0, fontWeight: 'bold', color: 'fg.onEmphasis', flexShrink: 0,
                 }}>2</Box>
-                <Text sx={{ fontWeight: 'bold', color: '#e6edf3', fontSize: 1 }}>
+                <Text sx={{ fontWeight: 'bold', color: 'fg.default', fontSize: 1 }}>
                   Paste your token
                 </Text>
               </Box>
@@ -179,7 +179,7 @@ export function AuthGate({ children }: Props) {
           {/* Security note */}
           <Box sx={{ textAlign: 'center', mt: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
             <ShieldLockIcon size={16} />
-            <Text sx={{ color: '#9198a1', fontSize: 0 }}>
+            <Text sx={{ color: 'fg.muted', fontSize: 0 }}>
               Your token is stored locally and never sent to any third-party server.
             </Text>
           </Box>
