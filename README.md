@@ -1,169 +1,109 @@
-# 🚀 Workflow Dispatch
+# Workflow Dispatch UI
 
-> A customizable workflow dispatch UI builder for GitHub Actions — way better than GitHub's built-in text-only inputs.
+> A beautiful, static web UI for dispatching GitHub Actions workflows — deployable on GitHub Pages.
 
-![Screenshot Placeholder](https://via.placeholder.com/800x400/1f2937/ffffff?text=Workflow+Dispatch+UI)
+**[Live Demo →](https://tag-assistant.github.io/workflow-dispatch/)**
 
-## ✨ Features
+## Features
 
-- 🔍 **Auto-discovery** — Automatically introspects workflow files to discover inputs
-- 🎨 **Rich Input Types** — Boolean toggles, dropdowns, multi-select, JSON editor, color picker, sliders, and more
-- 📋 **Custom Configuration** — Optional `.github/workflow-dispatch.yml` for custom labels, groups, themes, and validation
-- 🔗 **Shareable URLs** — Clean `/{owner}/{repo}/{workflow}` URLs you can share with your team
-- 📊 **Dispatch History** — See recent workflow runs with status indicators
-- 🌙 **Dark Mode** — Follows system preference with GitHub Primer theming
-- 📦 **JSON Mode** — Pack all inputs into a single JSON payload
-- 🏗️ **Embed Mode** — Use `?embed=true` for iframe embedding
+- 🚀 **Dispatch workflows** with a clean, form-based UI
+- 🔍 **Search repositories** and browse dispatchable workflows
+- 🎨 **Custom input types** — text, select, boolean, JSON, number, date, color, slider, file, multi-select
+- 📋 **Custom configuration** via `.github/workflow-dispatch.yml` — labels, icons, placeholders, input groups
+- 🌙 **Dark mode** — follows your system preference (Primer theme)
+- 📊 **Run history** — see recent workflow runs inline
+- 🔒 **Client-side only** — your token never leaves your browser
 
-## 🚀 Quick Start
+## Quick Start
 
-### Prerequisites
+1. Visit the [live demo](https://tag-assistant.github.io/workflow-dispatch/)
+2. Enter a [Personal Access Token](https://github.com/settings/tokens/new?scopes=repo,workflow&description=Workflow+Dispatch+UI) with `repo` and `workflow` scopes
+3. Search for a repository, pick a workflow, fill in inputs, and dispatch!
 
-- Node.js 22+
-- A [GitHub OAuth App](https://github.com/settings/developers)
+## Deploy Your Own
 
-### Environment Variables
+1. Fork this repository
+2. Enable GitHub Pages in your repo settings (source: GitHub Actions)
+3. Push to `main` — the included GitHub Actions workflow will build and deploy automatically
 
-Create a `.env` file in the root:
-
-```env
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-SESSION_SECRET=a-random-secret-string
-CALLBACK_URL=http://localhost:3001/api/auth/github/callback
-FRONTEND_URL=http://localhost:5173
-```
-
-### Manual Setup
+### Local Development
 
 ```bash
-# Install dependencies
-npm run install:all
-
-# Start dev servers (frontend + backend)
+git clone https://github.com/tag-assistant/workflow-dispatch.git
+cd workflow-dispatch
+npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:5173`, backend on `http://localhost:3001`.
+## Configuration
 
-### Docker
-
-```bash
-docker compose up
-```
-
-Production frontend on `http://localhost:3000`, backend on `http://localhost:3001`.
-
-For development with hot reload:
-
-```bash
-docker compose -f docker-compose.dev.yml up
-```
-
-## 📖 Configuration
-
-### Automatic Introspection
-
-Without any configuration, Workflow Dispatch automatically parses your workflow files and generates forms based on `workflow_dispatch.inputs`:
-
-```yaml
-# .github/workflows/deploy.yml
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        type: choice
-        options: [staging, production]
-      version:
-        type: string
-        required: true
-      dry_run:
-        type: boolean
-        default: false
-```
-
-### Custom UI Configuration
-
-For richer controls, add `.github/workflow-dispatch.yml` to your repo:
+Add a `.github/workflow-dispatch.yml` to any repository to customize the dispatch UI:
 
 ```yaml
 workflows:
   deploy.yml:
-    title: "🚀 Deploy to Production"
-    description: "Deploy the application to production"
-    theme: "blue"
+    title: "🚀 Deploy"
+    description: "Deploy to production"
     inputs:
       environment:
-        type: environment
-        label: "Target Environment"
+        label: "🌍 Environment"
         icon: "🌍"
       version:
-        label: "Version Tag"
-        placeholder: "v1.0.0"
-        pattern: "^v\\d+\\.\\d+\\.\\d+$"
-        validation: "Must be semver (e.g. v1.0.0)"
-      features:
-        type: multi-select
-        label: "Feature Flags"
-        options:
-          - { value: dark-mode, label: "Dark Mode" }
-          - { value: new-api, label: "New API" }
-      config:
-        type: json
-        label: "Deploy Config"
-        default: '{"replicas": 3}'
+        label: "📦 Version"
+        placeholder: "e.g. v1.0.0"
     groups:
-      - title: Deployment
-        inputs: [environment, version]
-      - title: Options
-        inputs: [features, config]
-    jsonMode: false
+      - title: "Deployment"
+        inputs: ["environment", "version"]
 ```
 
-## 📝 Input Types Reference
+### Configuration Options
 
-| Workflow Type | Config Type | Form Control |
-|---|---|---|
-| `string` | `string` | Text input |
-| `boolean` | `boolean` | Toggle switch |
-| `choice` | `choice` | Select dropdown |
-| `environment` | `environment` | Environment selector |
-| — | `multi-select` | Checkboxes |
-| — | `json` | Monaco JSON editor |
-| — | `number` | Number input |
-| — | `date` | Date picker |
-| — | `color` | Color picker |
-| — | `slider` | Range slider |
-| — | `file` | File upload/paste |
-| — | `regex` | Text with pattern validation |
+| Field | Description |
+|-------|-------------|
+| `title` | Display title for the workflow |
+| `description` | Description shown below the title |
+| `inputs.<name>.label` | Custom label for the input |
+| `inputs.<name>.icon` | Emoji icon shown before the label |
+| `inputs.<name>.placeholder` | Placeholder text |
+| `inputs.<name>.type` | Override input type (see below) |
+| `inputs.<name>.pattern` | Regex validation pattern |
+| `inputs.<name>.validation` | Custom validation error message |
+| `inputs.<name>.min/max/step` | Numeric constraints |
+| `inputs.<name>.options` | Options for multi-select (`[{value, label}]`) |
+| `groups` | Group inputs into titled sections |
+| `jsonMode` | Pack all inputs into a single JSON string |
 
-## 🔌 API Reference
+### Input Types
 
-All API routes require authentication (except auth routes).
+| Type | Description |
+|------|-------------|
+| `string` | Text input (default) |
+| `boolean` | Checkbox toggle |
+| `choice` | Dropdown select (from workflow `options`) |
+| `environment` | Dropdown populated from repo environments |
+| `number` | Numeric input with min/max/step |
+| `date` | Date picker |
+| `color` | Color picker with hex input |
+| `slider` | Range slider with min/max/step |
+| `json` | Monaco JSON editor |
+| `file` | File upload or paste |
+| `multi-select` | Checkbox group |
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/auth/status` | Current user info |
-| `GET` | `/api/auth/github` | OAuth redirect |
-| `GET` | `/api/auth/github/callback` | OAuth callback |
-| `POST` | `/api/auth/logout` | Logout |
-| `GET` | `/api/repos` | List user repos (`?q=` to search) |
-| `GET` | `/api/repos/:owner/:repo/workflows` | List workflows |
-| `GET` | `/api/repos/:owner/:repo/workflows/:id` | Workflow details + inputs |
-| `GET` | `/api/repos/:owner/:repo/config` | Fetch dispatch config |
-| `GET` | `/api/repos/:owner/:repo/branches` | List branches |
-| `GET` | `/api/repos/:owner/:repo/environments` | List environments |
-| `POST` | `/api/repos/:owner/:repo/dispatches` | Trigger workflow |
-| `GET` | `/api/repos/:owner/:repo/runs` | Recent workflow runs |
+## How It Works
 
-## 🤝 Contributing
+- **No backend** — all GitHub API calls happen directly from your browser using [Octokit](https://github.com/octokit/rest.js)
+- **PAT authentication** — your token is stored in `localStorage` and used for all API calls
+- **Workflow parsing** — fetches workflow YAML from the repo, parses `on.workflow_dispatch.inputs`, and generates a form
+- **Static deployment** — builds to a static `dist/` folder, deployed via GitHub Pages
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/amazing-feature`
-3. Commit your changes: `git commit -m 'feat: add amazing feature'`
-4. Push to the branch: `git push origin feat/amazing-feature`
-5. Open a Pull Request
+## Tech Stack
 
-## 📄 License
+- [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Primer React](https://primer.style/react/) — GitHub's design system
+- [Octokit](https://github.com/octokit/rest.js) — GitHub API client
+- [Vite](https://vitejs.dev/) — build tool
+- [yaml](https://github.com/eemeli/yaml) — YAML parser
 
-MIT — see [LICENSE](LICENSE) for details.
+## License
+
+MIT

@@ -1,0 +1,21 @@
+workflows:
+  test-dispatch.yml:
+    title: "🚀 Test Dispatch"
+    description: "A test workflow to demonstrate the dispatch UI"
+    inputs:
+      environment:
+        label: "🌍 Target Environment"
+        icon: "🌍"
+      version:
+        label: "📦 Version"
+        placeholder: "e.g. v1.0.0 or latest"
+      dry_run:
+        label: "🧪 Dry Run"
+      message:
+        label: "💬 Deploy Message"
+        placeholder: "What changed?"
+    groups:
+      - title: "Deployment"
+        inputs: ["environment", "version"]
+      - title: "Options"
+        inputs: ["dry_run", "message"]

@@ -1,0 +1,36 @@
+name: Test Dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      version:
+        description: 'Version to deploy'
+        required: true
+        type: string
+        default: 'latest'
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        type: boolean
+        default: false
+      message:
+        description: 'Deploy message'
+        required: false
+        type: string
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Version: ${{ inputs.version }}"
+          echo "Dry Run: ${{ inputs.dry_run }}"
+          echo "Message: ${{ inputs.message }}"
