@@ -14,9 +14,9 @@ function statusIcon(status: string, conclusion: string | null) {
     if (conclusion === 'success') return <CheckCircleIcon fill="var(--fgColor-success)" />;
     if (conclusion === 'failure') return <XCircleIcon fill="var(--fgColor-danger)" />;
     if (conclusion === 'cancelled') return <SkipIcon fill="var(--fgColor-muted)" />;
-    return <CheckCircleIcon />;
+    return <CheckCircleIcon fill="var(--fgColor-success)" />;
   }
-  if (status === 'in_progress') return <SyncIcon className="anim-rotate" />;
+  if (status === 'in_progress') return <SyncIcon className="anim-rotate" fill="var(--fgColor-attention)" />;
   return <ClockIcon fill="var(--fgColor-muted)" />;
 }
 

@@ -81,6 +81,12 @@ header, [data-component="header"] {
   border-color: #30363d;
 }
 
+/* SVGs - inherit text color */
+svg {
+  color: inherit;
+  fill: currentColor;
+}
+
 /* Spinner */
 [class*="Spinner"] circle {
   stroke: #58a6ff;
