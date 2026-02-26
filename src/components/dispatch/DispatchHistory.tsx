@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { ActionList, Avatar, Box, Label, Spinner, Text, RelativeTime } from '@primer/react';
 import { CheckCircleIcon, XCircleIcon, ClockIcon, SyncIcon, SkipIcon } from '@primer/octicons-react';
 import { listRuns } from '../../lib/github';
@@ -7,6 +7,10 @@ interface Props {
   owner: string;
   repo: string;
   workflowId?: number;
+}
+
+export interface DispatchHistoryHandle {
+  refresh: () => Promise<void>;
 }
 
 function statusIcon(status: string, conclusion: string | null) {
@@ -20,16 +24,24 @@ function statusIcon(status: string, conclusion: string | null) {
   return <ClockIcon fill="var(--fgColor-muted)" />;
 }
 
-export function DispatchHistory({ owner, repo, workflowId }: Props) {
+export const DispatchHistory = forwardRef<DispatchHistoryHandle, Props>(({ owner, repo, workflowId }, ref) => {
   const [runs, setRuns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    listRuns(owner, repo, workflowId)
-      .then(setRuns)
-      .catch(() => setRuns([]))
-      .finally(() => setLoading(false));
+  const fetchRuns = useCallback(async () => {
+    try {
+      const data = await listRuns(owner, repo, workflowId);
+      setRuns(data);
+    } catch {
+      setRuns([]);
+    } finally {
+      setLoading(false);
+    }
   }, [owner, repo, workflowId]);
+
+  useImperativeHandle(ref, () => ({ refresh: fetchRuns }), [fetchRuns]);
+
+  useEffect(() => { fetchRuns(); }, [fetchRuns]);
 
   if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><Spinner /></Box>;
   if (runs.length === 0) return <Text sx={{ color: 'fg.muted', fontStyle: 'italic' }}>No recent runs.</Text>;
@@ -58,4 +70,4 @@ export function DispatchHistory({ owner, repo, workflowId }: Props) {
       ))}
     </ActionList>
   );
-}
+});

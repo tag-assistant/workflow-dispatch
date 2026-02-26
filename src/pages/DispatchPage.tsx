@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Heading, Text, Flash, Spinner, Button, IconButton } from '@primer/react';
 import { WorkflowIcon, GearIcon, XIcon } from '@primer/octicons-react';
@@ -6,7 +6,7 @@ import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch
 import { parseWorkflowYaml } from '../lib/workflowParser';
 import { resolveInputs, type WorkflowConfig } from '../lib/types';
 import { DispatchForm } from '../components/dispatch/DispatchForm';
-import { DispatchHistory } from '../components/dispatch/DispatchHistory';
+import { DispatchHistory, type DispatchHistoryHandle } from '../components/dispatch/DispatchHistory';
 import { getConfigUrl } from '../lib/configTemplate';
 
 export function DispatchPage() {
@@ -23,6 +23,7 @@ export function DispatchPage() {
   const [dispatching, setDispatching] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [configExists, setConfigExists] = useState(false);
+  const historyRef = useRef<DispatchHistoryHandle>(null);
   const [bannerDismissed, setBannerDismissed] = useState(() => {
     if (!owner || !repo) return false;
     return localStorage.getItem(`wd-banner-dismissed:${owner}/${repo}`) === '1';
@@ -75,7 +76,15 @@ export function DispatchPage() {
         finalInputs = { [jsonInputName]: JSON.stringify(inputs) };
       }
       await ghDispatch(owner, repo, parseInt(workflowId), selectedBranch, finalInputs);
-      setToast({ type: 'success', message: 'Workflow dispatched successfully!' });
+      setToast({ type: 'success', message: '✅ Workflow dispatched!' });
+
+      // Auto-refresh runs after 2s delay, then poll every 5s for 30s
+      setTimeout(() => historyRef.current?.refresh(), 2000);
+      const pollId = setInterval(() => historyRef.current?.refresh(), 5000);
+      setTimeout(() => clearInterval(pollId), 30000);
+
+      // Scroll recent runs into view
+      document.getElementById('recent-runs')?.scrollIntoView({ behavior: 'smooth' });
     } catch (e: any) {
       setToast({ type: 'error', message: e.message });
     } finally {
@@ -155,11 +164,11 @@ export function DispatchPage() {
 
       {/* Recent Runs */}
       {owner && repo && (
-        <Box sx={{ mt: 5 }}>
+        <Box sx={{ mt: 5 }} id="recent-runs">
           <Heading sx={{ mb: 3, fontSize: 2, color: 'fg.default', pb: 2, borderBottom: '1px solid', borderColor: 'border.default' }}>
             Recent Runs
           </Heading>
-          <DispatchHistory owner={owner} repo={repo} workflowId={parseInt(workflowId!)} />
+          <DispatchHistory ref={historyRef} owner={owner} repo={repo} workflowId={parseInt(workflowId!)} />
         </Box>
       )}
     </Box>
