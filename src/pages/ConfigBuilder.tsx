@@ -244,7 +244,7 @@ function DroppableGroup({
           <DragHandle listeners={sortable.listeners} attributes={sortable.attributes} />
         )}
         <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isUngrouped ? 'fg.muted' : 'fg.default' }}>
-          {isUngrouped ? '📋' : '🎯'} {isUngrouped ? 'Ungrouped' : (
+          {isUngrouped ? '📥' : '🎯'} {isUngrouped ? 'Unassigned' : (
             <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
               <TextInput
                 size="small"
@@ -702,26 +702,6 @@ export function ConfigBuilder() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            {/* Ungrouped */}
-            <DroppableGroup
-              groupId={UNGROUPED_ID}
-              title="Ungrouped"
-              isUngrouped
-              inputNames={ungroupedInputs}
-            >
-              {ungroupedInputs.map(name => (
-                <SortableInputCard
-                  key={name}
-                  name={name}
-                  cfg={state.inputs[name]}
-                  expanded={expandedInputs.has(name)}
-                  onToggle={() => toggleInput(name)}
-                  onUpdate={(field, value) => updateInput(name, field, value)}
-                  state={state}
-                />
-              ))}
-            </DroppableGroup>
-
             {/* Groups (sortable) */}
             <SortableContext items={groupSortIds} strategy={verticalListSortingStrategy}>
               {state.groups.map(g => {
@@ -751,12 +731,32 @@ export function ConfigBuilder() {
               })}
             </SortableContext>
 
+            <Button size="small" leadingVisual={PlusIcon} onClick={addGroup} sx={{ mt: 2, mb: 3 }}>Add Group</Button>
+
+            {/* Unassigned */}
+            <DroppableGroup
+              groupId={UNGROUPED_ID}
+              title="Unassigned"
+              isUngrouped
+              inputNames={ungroupedInputs}
+            >
+              {ungroupedInputs.map(name => (
+                <SortableInputCard
+                  key={name}
+                  name={name}
+                  cfg={state.inputs[name]}
+                  expanded={expandedInputs.has(name)}
+                  onToggle={() => toggleInput(name)}
+                  onUpdate={(field, value) => updateInput(name, field, value)}
+                  state={state}
+                />
+              ))}
+            </DroppableGroup>
+
             <DragOverlay dropAnimation={null}>
               {overlayContent}
             </DragOverlay>
           </DndContext>
-
-          <Button size="small" leadingVisual={PlusIcon} onClick={addGroup} sx={{ mt: 2 }}>Add Group</Button>
         </Box>
 
         {/* Right: Live Preview */}
