@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Heading, Text, Flash, Spinner } from '@primer/react';
-import { WorkflowIcon } from '@primer/octicons-react';
+import { Box, Heading, Text, Flash, Spinner, Button, IconButton } from '@primer/react';
+import { WorkflowIcon, GearIcon, XIcon } from '@primer/octicons-react';
 import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
 import { resolveInputs, type WorkflowConfig } from '../lib/types';
 import { DispatchForm } from '../components/dispatch/DispatchForm';
 import { DispatchHistory } from '../components/dispatch/DispatchHistory';
+import { getConfigUrl } from '../lib/configTemplate';
 
 export function DispatchPage() {
   const { owner, repo, workflow: workflowId } = useParams<{ owner: string; repo: string; workflow: string }>();
@@ -21,6 +22,11 @@ export function DispatchPage() {
   const [error, setError] = useState('');
   const [dispatching, setDispatching] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [configExists, setConfigExists] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    if (!owner || !repo) return false;
+    return localStorage.getItem(`wd-banner-dismissed:${owner}/${repo}`) === '1';
+  });
 
   useEffect(() => {
     if (!owner || !repo || !workflowId) return;
@@ -43,6 +49,7 @@ export function DispatchPage() {
         ]);
 
         const workflowFile = wf.path.split('/').pop() || '';
+        setConfigExists(!!cfg);
         setConfig(cfg?.workflows?.[workflowFile] || null);
         setBranches(br);
         if (br.length > 0) {
@@ -82,6 +89,13 @@ export function DispatchPage() {
   const resolvedInputs = resolveInputs(parsedInputs, config || undefined);
   const title = config?.title || workflowName;
   const description = config?.description;
+  const workflowFile = workflowPath.split('/').pop() || '';
+  const configUrl = getConfigUrl(owner!, repo!, selectedBranch, configExists, workflowFile, parsedInputs);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem(`wd-banner-dismissed:${owner}/${repo}`, '1');
+  };
 
   return (
     <Box>
@@ -91,7 +105,18 @@ export function DispatchPage() {
           <WorkflowIcon size={24} />
         </Box>
         <Box>
-          <Heading sx={{ color: 'fg.default', fontSize: 3 }}>{title}</Heading>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Heading sx={{ color: 'fg.default', fontSize: 3 }}>{title}</Heading>
+            <a href={configUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="invisible"
+                size="small"
+                leadingVisual={GearIcon}
+              >
+                {configExists ? 'Edit Config' : 'Customize'}
+              </Button>
+            </a>
+          </Box>
           <Text sx={{ color: 'fg.muted', fontSize: 1 }}>{owner}/{repo} • {workflowPath}</Text>
           {description && <Text as="p" sx={{ mt: 1, color: 'fg.muted', fontSize: 1 }}>{description}</Text>}
         </Box>
@@ -100,6 +125,16 @@ export function DispatchPage() {
       {toast && (
         <Flash variant={toast.type === 'success' ? 'success' : 'danger'} sx={{ mb: 3 }}>
           {toast.message}
+        </Flash>
+      )}
+
+      {!configExists && !bannerDismissed && (
+        <Flash variant="default" sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ fontSize: 1 }}>
+            ℹ️ This workflow is using auto-detected inputs. Customize labels, grouping, and validation with a config file.{' '}
+            <a href={configUrl} target="_blank" rel="noopener noreferrer">Customize →</a>
+          </Box>
+          <IconButton icon={XIcon} variant="invisible" size="small" aria-label="Dismiss" onClick={dismissBanner} />
         </Flash>
       )}
 
