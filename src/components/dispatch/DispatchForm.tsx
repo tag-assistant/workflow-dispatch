@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { Box, Button, FormControl, ActionMenu, ActionList, Text } from '@primer/react';
 import { RocketIcon, GitBranchIcon, InboxIcon } from '@primer/octicons-react';
 import { InputField } from './InputField';
@@ -15,15 +15,27 @@ interface Props {
   dispatching: boolean;
   owner: string;
   repo: string;
+  initialValues?: Record<string, string>;
+  onValuesChange?: (values: Record<string, string>) => void;
+  shareButton?: ReactNode;
 }
 
-export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranchChange, onDispatch, dispatching, owner, repo }: Props) {
+export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranchChange, onDispatch, dispatching, owner, repo, initialValues, onValuesChange, shareButton }: Props) {
   const [values, setValues] = useState<Record<string, string>>(() => {
     const defaults: Record<string, string> = {};
     inputs.forEach(i => { if (i.default) defaults[i.name] = i.default; });
+    // Apply URL param overrides
+    if (initialValues) {
+      Object.entries(initialValues).forEach(([k, v]) => { defaults[k] = v; });
+    }
     return defaults;
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Report values changes
+  useEffect(() => {
+    onValuesChange?.(values);
+  }, [values, onValuesChange]);
 
   const setValue = useCallback((name: string, value: string) => {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -115,6 +127,7 @@ export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranc
           </ActionMenu>
         </FormControl>
         <Box sx={{ flex: 1 }} />
+        {shareButton}
         <Button variant="primary" size="large" onClick={handleSubmit} disabled={dispatching} leadingVisual={RocketIcon}>
           {dispatching ? 'Dispatching...' : 'Dispatch Workflow'}
         </Button>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Heading, Text, Button, IconButton, Breadcrumbs } from '@primer/react';
-import { WorkflowIcon, GearIcon, XIcon } from '@primer/octicons-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Box, Heading, Text, Button, IconButton, Breadcrumbs, Tooltip } from '@primer/react';
+import { WorkflowIcon, GearIcon, StarIcon, StarFillIcon, LinkIcon } from '@primer/octicons-react';
 import { Banner, SkeletonText, SkeletonBox } from '@primer/react/experimental';
 import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
@@ -9,6 +9,7 @@ import { resolveInputs, type WorkflowConfig } from '../lib/types';
 import { DispatchForm } from '../components/dispatch/DispatchForm';
 import { DispatchHistory, type DispatchHistoryHandle } from '../components/dispatch/DispatchHistory';
 import { getConfigUrl } from '../lib/configTemplate';
+import { markLastUsed, isFavorite, toggleFavorite, workflowKey } from '../lib/storage';
 
 function DispatchPageSkeleton() {
   return (
@@ -38,6 +39,7 @@ function DispatchPageSkeleton() {
 export function DispatchPage() {
   const { owner, repo, workflow: workflowId } = useParams<{ owner: string; repo: string; workflow: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [workflowName, setWorkflowName] = useState('');
   const [workflowPath, setWorkflowPath] = useState('');
@@ -50,10 +52,27 @@ export function DispatchPage() {
   const [dispatching, setDispatching] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [configExists, setConfigExists] = useState(false);
+  const [, setTick] = useState(0);
+  const [copied, setCopied] = useState(false);
   const historyRef = useRef<DispatchHistoryHandle>(null);
+  const formValuesRef = useRef<Record<string, string>>({});
   const [tipDismissed, setTipDismissed] = useState(() => {
     if (!owner || !repo) return false;
     return localStorage.getItem(`wd-banner-dismissed:${owner}/${repo}`) === '1';
+  });
+
+  // Track last used
+  useEffect(() => {
+    if (owner && repo && workflowId) {
+      markLastUsed(workflowKey(owner, repo, workflowId));
+    }
+  }, [owner, repo, workflowId]);
+
+  // Read URL params for pre-fill
+  const urlRef = searchParams.get('ref');
+  const urlInputs: Record<string, string> = {};
+  searchParams.forEach((value, key) => {
+    if (key !== 'ref') urlInputs[key] = value;
   });
 
   useEffect(() => {
@@ -81,7 +100,9 @@ export function DispatchPage() {
         setConfig(cfg?.workflows?.[workflowFile] || null);
         setBranches(br);
         if (br.length > 0) {
-          const def = br.find((b: any) => b.name === 'main') || br[0];
+          const refFromUrl = urlRef;
+          const match = refFromUrl ? br.find((b: any) => b.name === refFromUrl) : null;
+          const def = match || br.find((b: any) => b.name === 'main') || br[0];
           setSelectedBranch(def.name);
         }
       } catch (e: any) {
@@ -104,6 +125,7 @@ export function DispatchPage() {
       }
       await ghDispatch(owner, repo, parseInt(workflowId), selectedBranch, finalInputs);
       setFeedback({ type: 'success', message: 'Workflow dispatched successfully' });
+      markLastUsed(workflowKey(owner, repo, workflowId));
 
       setTimeout(() => historyRef.current?.refresh(), 2000);
       const pollId = setInterval(() => historyRef.current?.refresh(), 5000);
@@ -117,11 +139,33 @@ export function DispatchPage() {
     }
   }, [owner, repo, workflowId, selectedBranch, config, parsedInputs]);
 
+  const handleCopyLink = useCallback(() => {
+    const vals = formValuesRef.current;
+    const params = new URLSearchParams();
+    if (selectedBranch && selectedBranch !== 'main') params.set('ref', selectedBranch);
+    Object.entries(vals).forEach(([k, v]) => { if (v) params.set(k, v); });
+    const qs = params.toString();
+    const base = `${window.location.origin}${window.location.pathname}#/${owner}/${repo}/${workflowId}`;
+    const url = qs ? `${base}?${qs}` : base;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [owner, repo, workflowId, selectedBranch]);
+
+  const handleToggleFavorite = () => {
+    if (owner && repo && workflowId) {
+      toggleFavorite(workflowKey(owner, repo, workflowId));
+      setTick(t => t + 1);
+    }
+  };
+
   const resolvedInputs = !loading ? resolveInputs(parsedInputs, config || undefined) : [];
   const title = config?.title || workflowName || 'Workflow';
   const description = config?.description;
   const workflowFile = workflowPath.split('/').pop() || '';
   const configUrl = !loading ? getConfigUrl(owner!, repo!, selectedBranch, configExists, workflowFile, parsedInputs) : '';
+  const fav = owner && repo && workflowId ? isFavorite(workflowKey(owner, repo, workflowId)) : false;
 
   const dismissTip = () => {
     setTipDismissed(true);
@@ -149,9 +193,17 @@ export function DispatchPage() {
             <Box sx={{ color: 'fg.muted', mt: 1 }}>
               <WorkflowIcon size={24} />
             </Box>
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Heading sx={{ color: 'fg.default', fontSize: 3 }}>{title}</Heading>
+                <IconButton
+                  aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
+                  icon={fav ? StarFillIcon : StarIcon}
+                  variant="invisible"
+                  size="small"
+                  sx={{ color: fav ? 'attention.fg' : 'fg.muted' }}
+                  onClick={handleToggleFavorite}
+                />
                 <Button
                   variant="invisible"
                   size="small"
@@ -201,6 +253,20 @@ export function DispatchPage() {
               dispatching={dispatching}
               owner={owner!}
               repo={repo!}
+              initialValues={urlInputs}
+              onValuesChange={(vals) => { formValuesRef.current = vals; }}
+              shareButton={
+                <Tooltip text={copied ? 'Copied!' : 'Copy link with current values'} direction="n">
+                  <Button
+                    variant="invisible"
+                    size="large"
+                    leadingVisual={LinkIcon}
+                    onClick={handleCopyLink}
+                  >
+                    {copied ? 'Copied!' : 'Share'}
+                  </Button>
+                </Tooltip>
+              }
             />
           </Box>
 
