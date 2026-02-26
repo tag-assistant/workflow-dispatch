@@ -5,6 +5,7 @@ import { AuthGate } from './components/layout/AuthGate';
 import { HomePage } from './pages/Home';
 import { RepoView } from './pages/RepoView';
 import { DispatchPage } from './pages/DispatchPage';
+import { ConfigBuilder } from './pages/ConfigBuilder';
 import { Settings } from './pages/Settings';
 
 export function App() {
@@ -18,6 +19,7 @@ export function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/:owner/:repo" element={<RepoView />} />
             <Route path="/:owner/:repo/:workflow" element={<DispatchPage />} />
+            <Route path="/:owner/:repo/:workflow/configure" element={<ConfigBuilder />} />
           </Routes>
         </Box>
       </AuthGate>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Heading, Text, Flash, Spinner, Button, IconButton } from '@primer/react';
 import { WorkflowIcon, GearIcon, XIcon } from '@primer/octicons-react';
 import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
@@ -11,6 +11,7 @@ import { getConfigUrl } from '../lib/configTemplate';
 
 export function DispatchPage() {
   const { owner, repo, workflow: workflowId } = useParams<{ owner: string; repo: string; workflow: string }>();
+  const navigate = useNavigate();
 
   const [workflowName, setWorkflowName] = useState('');
   const [workflowPath, setWorkflowPath] = useState('');
@@ -116,15 +117,14 @@ export function DispatchPage() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Heading sx={{ color: 'fg.default', fontSize: 3 }}>{title}</Heading>
-            <a href={configUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-              <Button
-                variant="invisible"
-                size="small"
-                leadingVisual={GearIcon}
-              >
-                {configExists ? 'Edit Config' : 'Customize'}
-              </Button>
-            </a>
+            <Button
+              variant="invisible"
+              size="small"
+              leadingVisual={GearIcon}
+              onClick={() => navigate(`/${owner}/${repo}/${workflowId}/configure`)}
+            >
+              {configExists ? 'Edit Config' : '⚙️ Customize'}
+            </Button>
           </Box>
           <Text sx={{ color: 'fg.muted', fontSize: 1 }}>{owner}/{repo} • {workflowPath}</Text>
           {description && <Text as="p" sx={{ mt: 1, color: 'fg.muted', fontSize: 1 }}>{description}</Text>}
