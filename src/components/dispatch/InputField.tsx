@@ -51,7 +51,7 @@ export function InputField({ input, value, onChange, error, owner, repo }: Props
       case 'environment':
         return <SelectInput options={[]} value={value} onChange={onChange} owner={owner} repo={repo} isEnvironment />;
       case 'multi-select':
-        return <MultiSelect options={input.config?.options || []} value={value} onChange={onChange} />;
+        return <MultiSelect options={input.config?.options || []} value={value} onChange={onChange} owner={owner} repo={repo} optionsFrom={input.optionsFrom} />;
       case 'json':
         return <JsonEditor value={value} onChange={onChange} />;
       case 'number':
