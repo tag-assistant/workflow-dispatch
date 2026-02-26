@@ -23,7 +23,7 @@ export function clearToken(): void {
 }
 
 // Default client ID for the hosted version (tag-assistant.github.io)
-const DEFAULT_CLIENT_ID = 'PLACEHOLDER_CLIENT_ID';
+const DEFAULT_CLIENT_ID = 'Ov23liYkN9KtXO20gIoN';
 
 export function getClientId(): string {
   // Priority: URL param > localStorage > default
