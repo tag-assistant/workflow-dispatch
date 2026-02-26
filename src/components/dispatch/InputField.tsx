@@ -26,7 +26,17 @@ export function InputField({ input, value, onChange, error, owner, repo }: Props
       case 'boolean':
         return <BooleanToggle value={value} onChange={onChange} />;
       case 'choice':
-        return <SelectInput options={input.options || []} value={value} onChange={onChange} />;
+      case 'select':
+        return (
+          <SelectInput
+            options={input.options || []}
+            value={value}
+            onChange={onChange}
+            owner={owner}
+            repo={repo}
+            optionsFrom={input.optionsFrom}
+          />
+        );
       case 'environment':
         return <SelectInput options={[]} value={value} onChange={onChange} owner={owner} repo={repo} isEnvironment />;
       case 'multi-select':
@@ -44,16 +54,15 @@ export function InputField({ input, value, onChange, error, owner, repo }: Props
       case 'file':
         return <FileInput value={value} onChange={onChange} />;
       default:
-        return <TextInput value={value} onChange={onChange} placeholder={input.placeholder} multiline={input.description?.length > 100} />;
+        return <TextInput value={value} onChange={onChange} placeholder={input.placeholder} multiline={(input.description?.length || 0) > 100} />;
     }
   };
 
+  const isBool = input.resolvedType === 'boolean';
+
   return (
-    <FormControl>
-      <FormControl.Label>
-        {input.config?.icon ? `${input.config.icon} ` : ''}{input.label}
-        {input.required && <span style={{ color: 'var(--fgColor-danger)' }}> *</span>}
-      </FormControl.Label>
+    <FormControl required={input.required}>
+      <FormControl.Label>{input.label}</FormControl.Label>
       {input.description && <FormControl.Caption>{input.description}</FormControl.Caption>}
       {renderControl()}
       {error && <FormControl.Validation variant="error">{error}</FormControl.Validation>}

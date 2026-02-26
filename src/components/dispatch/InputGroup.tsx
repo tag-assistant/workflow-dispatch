@@ -1,4 +1,4 @@
-import { Box, Heading } from '@primer/react';
+import { Box, Text } from '@primer/react';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -8,10 +8,10 @@ interface Props {
 
 export function InputGroup({ title, children }: Props) {
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, p: 3, mb: 3 }}>
-      <Heading sx={{ fontSize: 1, mb: 3, color: 'fg.muted', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+    <Box sx={{ mb: 4 }}>
+      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.muted', textTransform: 'uppercase', letterSpacing: '0.05em', pb: 2, mb: 3, display: 'block', borderBottom: '1px solid', borderColor: 'border.default' }}>
         {title}
-      </Heading>
+      </Text>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {children}
       </Box>

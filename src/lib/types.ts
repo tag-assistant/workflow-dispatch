@@ -1,15 +1,23 @@
+export interface OptionsFrom {
+  source: 'tags' | 'branches' | 'releases' | 'environments' | 'collaborators' | 'labels' | 'milestones' | 'api';
+  endpoint?: string;
+  valuePath?: string;
+  labelPath?: string;
+}
+
 export interface InputConfig {
   type?: string;
   label?: string;
   icon?: string;
   placeholder?: string;
   pattern?: string;
-  validation?: string;
+  validationMessage?: string;
   options?: Array<{ value: string; label: string }>;
   default?: string;
   min?: number;
   max?: number;
   step?: number;
+  optionsFrom?: OptionsFrom;
 }
 
 export interface WorkflowConfig {
@@ -41,6 +49,7 @@ export interface ResolvedInput extends WorkflowInput {
   placeholder?: string;
   pattern?: string;
   validationMessage?: string;
+  optionsFrom?: OptionsFrom;
 }
 
 export interface WorkflowRun {
@@ -56,7 +65,26 @@ export interface WorkflowRun {
 }
 
 export function resolveInputs(inputs: WorkflowInput[], config?: WorkflowConfig): ResolvedInput[] {
-  return inputs.map(input => {
+  // Collect all config input names that aren't in parsed inputs (dynamic options from config)
+  const parsedNames = new Set(inputs.map(i => i.name));
+  const extraInputs: WorkflowInput[] = [];
+  if (config?.inputs) {
+    for (const [name, cfg] of Object.entries(config.inputs)) {
+      if (!parsedNames.has(name) && cfg.optionsFrom) {
+        extraInputs.push({
+          name,
+          description: '',
+          required: false,
+          type: cfg.type || 'string',
+          options: undefined,
+        });
+      }
+    }
+  }
+
+  const allInputs = [...inputs, ...extraInputs];
+
+  return allInputs.map(input => {
     const cfg = config?.inputs?.[input.name];
     return {
       ...input,
@@ -65,9 +93,10 @@ export function resolveInputs(inputs: WorkflowInput[], config?: WorkflowConfig):
       label: cfg?.label || input.name,
       placeholder: cfg?.placeholder,
       pattern: cfg?.pattern,
-      validationMessage: cfg?.validation,
+      validationMessage: cfg?.validationMessage,
       default: cfg?.default || input.default,
       options: cfg?.options?.map(o => o.value) || input.options,
+      optionsFrom: cfg?.optionsFrom,
     };
   });
 }

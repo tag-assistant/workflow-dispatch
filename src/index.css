@@ -1,28 +1,4 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0d1117;
-  color: #e6edf3;
-}
-
-/* Ensure Primer text colors have proper contrast in dark mode */
-[data-color-mode="dark"] h1,
-[data-color-mode="dark"] h2,
-[data-color-mode="dark"] h3,
-[data-color-mode="dark"] h4,
-[data-color-mode="dark"] p,
-[data-color-mode="dark"] span,
-[data-color-mode="dark"] label,
-[data-color-mode="dark"] div {
-  color: inherit;
-}
-
-/* Force text visibility when Primer theme vars don't load */
-h1, h2, h3, h4 {
-  color: #e6edf3;
-}
-
-/* Muted text should still be readable */
-.color-fg-muted {
-  color: #9198a1 !important;
 }

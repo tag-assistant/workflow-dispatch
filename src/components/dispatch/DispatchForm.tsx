@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Box, Button, FormControl, ActionMenu, ActionList, Text } from '@primer/react';
-import { RocketIcon, GitBranchIcon } from '@primer/octicons-react';
+import { RocketIcon, GitBranchIcon, InboxIcon } from '@primer/octicons-react';
 import { InputField } from './InputField';
 import { InputGroup } from './InputGroup';
 import type { ResolvedInput } from '../../lib/types';
@@ -68,8 +68,13 @@ export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranc
   return (
     <Box>
       {inputs.length === 0 && (
-        <Box sx={{ py: 4, px: 3, mb: 4, border: '1px solid', borderColor: 'border.default', borderRadius: 2, bg: 'canvas.subtle' }}>
-          <Text sx={{ color: 'fg.muted', fontStyle: 'italic' }}>This workflow has no configurable inputs. You can dispatch it directly.</Text>
+        <Box sx={{ py: 5, textAlign: 'center' }}>
+          <Box sx={{ color: 'fg.muted', mb: 2 }}>
+            <InboxIcon size={32} />
+          </Box>
+          <Text sx={{ color: 'fg.muted', fontSize: 1 }}>
+            This workflow has no configurable inputs. You can dispatch it directly.
+          </Text>
         </Box>
       )}
 
@@ -88,7 +93,8 @@ export function DispatchForm({ inputs, groups, branches, selectedBranch, onBranc
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 4, pt: 4, borderTop: '1px solid', borderColor: 'border.default' }}>
+      {/* Footer bar */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pt: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
         <FormControl>
           <FormControl.Label visuallyHidden>Branch</FormControl.Label>
           <ActionMenu>

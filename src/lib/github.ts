@@ -97,6 +97,68 @@ export async function listRuns(owner: string, repo: string, workflowId?: number)
   return data.workflow_runs;
 }
 
+export async function fetchDynamicOptions(
+  owner: string,
+  repo: string,
+  source: string,
+  endpoint?: string,
+  valuePath?: string,
+  labelPath?: string,
+): Promise<Array<{ value: string; label: string }>> {
+  const ok = getOctokit();
+  const extract = (item: any, path?: string) => {
+    if (!path) return String(item);
+    return path.split('.').reduce((o, k) => o?.[k], item);
+  };
+
+  try {
+    switch (source) {
+      case 'tags': {
+        const { data } = await ok.repos.listTags({ owner, repo, per_page: 50 });
+        return data.map(t => ({ value: t.name, label: t.name }));
+      }
+      case 'branches': {
+        const { data } = await ok.repos.listBranches({ owner, repo, per_page: 50 });
+        return data.map(b => ({ value: b.name, label: b.name }));
+      }
+      case 'releases': {
+        const { data } = await ok.repos.listReleases({ owner, repo, per_page: 50 });
+        return data.map(r => ({ value: r.tag_name, label: r.name || r.tag_name }));
+      }
+      case 'environments': {
+        const { data } = await ok.repos.getAllEnvironments({ owner, repo });
+        return (data.environments || []).map((e: any) => ({ value: e.name, label: e.name }));
+      }
+      case 'collaborators': {
+        const { data } = await ok.repos.listCollaborators({ owner, repo, per_page: 50 });
+        return data.map(c => ({ value: c.login, label: c.login }));
+      }
+      case 'labels': {
+        const { data } = await ok.issues.listLabelsForRepo({ owner, repo, per_page: 100 });
+        return data.map(l => ({ value: l.name, label: l.name }));
+      }
+      case 'milestones': {
+        const { data } = await ok.issues.listMilestones({ owner, repo, per_page: 50 });
+        return data.map(m => ({ value: m.title, label: m.title }));
+      }
+      case 'api': {
+        if (!endpoint) return [];
+        const url = endpoint.replace('{owner}', owner).replace('{repo}', repo);
+        const { data } = await ok.request(`GET ${url}`);
+        const items = Array.isArray(data) ? data : (data as any)?.items || [];
+        return items.map((item: any) => ({
+          value: String(extract(item, valuePath) ?? ''),
+          label: String(extract(item, labelPath || valuePath) ?? ''),
+        }));
+      }
+      default:
+        return [];
+    }
+  } catch {
+    return [];
+  }
+}
+
 export async function getRepoConfig(owner: string, repo: string) {
   const ok = getOctokit();
   try {

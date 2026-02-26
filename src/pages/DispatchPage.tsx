@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Heading, Text, Flash, Spinner } from '@primer/react';
+import { WorkflowIcon } from '@primer/octicons-react';
 import { getWorkflowContent, listBranches, getRepoConfig, dispatch as ghDispatch, listWorkflows } from '../lib/github';
 import { parseWorkflowYaml } from '../lib/workflowParser';
 import { resolveInputs, type WorkflowConfig } from '../lib/types';
@@ -25,7 +26,6 @@ export function DispatchPage() {
     if (!owner || !repo || !workflowId) return;
     (async () => {
       try {
-        // Get workflow metadata to find the path
         const workflows = await listWorkflows(owner, repo);
         const wf = workflows.find(w => w.id.toString() === workflowId);
         if (!wf) throw new Error('Workflow not found');
@@ -33,12 +33,10 @@ export function DispatchPage() {
         setWorkflowName(wf.name);
         setWorkflowPath(wf.path);
 
-        // Fetch and parse workflow YAML
         const content = await getWorkflowContent(owner, repo, wf.path);
         const parsed = parseWorkflowYaml(content);
         setParsedInputs(parsed.inputs);
 
-        // Fetch config and branches in parallel
         const [cfg, br] = await Promise.all([
           getRepoConfig(owner, repo).catch(() => null),
           listBranches(owner, repo).catch(() => []),
@@ -87,10 +85,16 @@ export function DispatchPage() {
 
   return (
     <Box>
-      <Box sx={{ mb: 4 }}>
-        <Heading sx={{ color: 'fg.default' }}>{title}</Heading>
-        <Text sx={{ color: 'fg.muted' }}>{owner}/{repo} • {workflowPath}</Text>
-        {description && <Text as="p" sx={{ mt: 1, color: 'fg.muted' }}>{description}</Text>}
+      {/* Page Header */}
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+        <Box sx={{ color: 'fg.muted', mt: 1 }}>
+          <WorkflowIcon size={24} />
+        </Box>
+        <Box>
+          <Heading sx={{ color: 'fg.default', fontSize: 3 }}>{title}</Heading>
+          <Text sx={{ color: 'fg.muted', fontSize: 1 }}>{owner}/{repo} • {workflowPath}</Text>
+          {description && <Text as="p" sx={{ mt: 1, color: 'fg.muted', fontSize: 1 }}>{description}</Text>}
+        </Box>
       </Box>
 
       {toast && (
@@ -99,21 +103,27 @@ export function DispatchPage() {
         </Flash>
       )}
 
-      <DispatchForm
-        inputs={resolvedInputs}
-        groups={config?.groups}
-        branches={branches}
-        selectedBranch={selectedBranch}
-        onBranchChange={setSelectedBranch}
-        onDispatch={handleDispatch}
-        dispatching={dispatching}
-        owner={owner!}
-        repo={repo!}
-      />
+      {/* Form Card */}
+      <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, bg: 'canvas.subtle', p: 4 }}>
+        <DispatchForm
+          inputs={resolvedInputs}
+          groups={config?.groups}
+          branches={branches}
+          selectedBranch={selectedBranch}
+          onBranchChange={setSelectedBranch}
+          onDispatch={handleDispatch}
+          dispatching={dispatching}
+          owner={owner!}
+          repo={repo!}
+        />
+      </Box>
 
+      {/* Recent Runs */}
       {owner && repo && (
-        <Box sx={{ mt: 6 }}>
-          <Heading sx={{ mb: 3, fontSize: 2, color: 'fg.default' }}>Recent Runs</Heading>
+        <Box sx={{ mt: 5 }}>
+          <Heading sx={{ mb: 3, fontSize: 2, color: 'fg.default', pb: 2, borderBottom: '1px solid', borderColor: 'border.default' }}>
+            Recent Runs
+          </Heading>
           <DispatchHistory owner={owner} repo={repo} workflowId={parseInt(workflowId!)} />
         </Box>
       )}
